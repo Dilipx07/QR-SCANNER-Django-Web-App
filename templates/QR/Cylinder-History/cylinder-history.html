@@ -1,0 +1,186 @@
+{% extends 'Dashboard/User/user-dashboard.html' %}
+
+{% load static %}
+
+{% block User-Head %}
+{% endblock User-Head %}
+
+{% block User-Body %}
+<div id="preloader"></div>
+<section class="section">
+  <div class="row">
+    <div class="col-12">
+      <a href="{% url 'Cylinder-Stock-Dashboard' %}" style="color:white;">
+        <button type="button" class="btn btn-back text-white float-left mb-2">
+          <span class="fa fa-arrow-circle-left"></span>&nbsp; Home
+        </button>
+      </a>
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title text-center mt-3 mb-0 pb-0"><b>Cylinder Inward / Outward History</b></h4><hr>
+          <!-- Bordered Table -->
+          <div class="mt-1">
+            <form id="cylinder-History" class="needs-validation" action="{% url 'Cylinder-Inward-Outward-History-Submit' %}" method="get" novalidate="novalidate"> 
+              <div class="row mt-1 mb-3">
+                <div class="col-12">
+                  <label for="cylinder_gas_vendor" class="form-label">Vendor name :</label>
+                  <select name="cylinder_gas_vendor" id="cylinder_gas_vendor" class="form-select form-control-sm text-center" required>
+                    <option value disabled selected>Select a vendor</option>
+                    {% for gcv in gas_cylinder_vendors %}
+                      <option value="{{gcv.gas_cylinder_vendor_id}}" {% if vendor_name == gcv.gas_cylinder_vendor_name %}selected{% endif %}>{{gcv.gas_cylinder_vendor_name}}</option>
+                    {% endfor %}
+                    <option value="ALL" {% if vendor_name == "ALL" %}selected{% endif %}>ALL</option>
+                  </select>
+                  <code class="invalid-feedback text-center">
+                    Please select a vendor.
+                  </code>
+                </div>
+                <div class="col-6 mt-2">
+                  <label for="from_date" class="form-label bold">Start Date :</label>
+                  <input type="date" class="form-control" id="from_date" name="from_date" {% if from_date %}value="{{from_date}}"{% endif %} required>
+                  <code class="invalid-feedback text-center">
+                    Please select a date.
+                  </code>
+                  <code class="invalid-feedback text-center" id="incorrect-start-date" style="display: none;">
+                    Please enter a date less than or equal to today.
+                  </code>
+                </div>
+                <div class="col-6 mt-2">
+                  <label for="to_date" class="form-label">End Date :</label>
+                  <input type="date" class="form-control" id="to_date" name="to_date" {% if to_date %}value="{{to_date}}"{% endif %} required>
+                  <code class="invalid-feedback text-center">
+                    Please select a date.
+                  </code>
+                  <code class="invalid-feedback text-center" id="incorrect-end-date" style="display: none;">
+                    Please enter a date less than or equal to today.
+                  </code>
+                </div>
+                <div class="col-12 text-center">
+                  <button type="submit" class="btn btn-submit btn-sm text-white mt-3">
+                    <i class="fa fa-search"></i>
+                    <span><b>Search</b></span>
+                  </button>
+                </div>
+              </div>
+          </div>
+          <hr>
+          {% if vendor_name %}
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+              <thead class="w-100">
+                <tr>
+                  <th class="text-center">#</th>
+                  <th class="text-center">Cylinder&nbsp;Number</th>
+                  <th class="text-center">Cylinder&nbsp;Type</th>
+                  <th class="text-center">PO&nbsp;No.</th>
+                  <th class="text-center">PO&nbsp;Date</th>
+                  <th class="text-center">GRN&nbsp;No.</th>
+                  <th class="text-center">GRN&nbsp;Date</th>
+                  <th class="text-center">Inward&nbsp;DC&nbsp;/&nbsp;Invoice&nbsp;No.</th>
+                  <th class="text-center">Inward&nbsp;Description</th>
+                  <th class="text-center">Inward&nbsp;Date&nbsp;|&nbsp;Time</th>
+                  <th class="text-center">Stock&nbsp;In&nbsp;Date&nbsp;|&nbsp;Time</th>
+                  <th class="text-center">Outward&nbsp;Date&nbsp;|&nbsp;Time</th>
+                  <th class="text-center">Stock&nbsp;Out&nbsp;Date&nbsp;|&nbsp;Time</th>
+                  <th class="text-center">Outward&nbsp;Return&nbsp;DC&nbsp;No.</th>
+                  <th class="text-center">Outward&nbsp;Description</th>
+                  <th class="text-center">Entered&nbsp;By</th>
+                </tr>
+              </thead>
+              <tbody class="text-center">
+                {% if cylinder_stock_history %}
+                {% for csh in cylinder_stock_history %}
+                  <tr>
+                    <th class="text-center">{{forloop.counter}}</th>
+                    <td class="text-center">
+                      {% if csh.cylinder_sl_r_qr_no %}{{csh.cylinder_sl_r_qr_no}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.cylinder_gas_type.cylinder_gas_type %}{{csh.cylinder_gas_type.cylinder_gas_type}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Inward_Table.cylinder_po_no %}{{csh.Cylinder_Inward_Table.cylinder_po_no}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Inward_Table.cylinder_po_Date %}{{csh.Cylinder_Inward_Table.cylinder_po_Date|date:'d-m-Y'}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Inward_Table.cylinder_GRN_no %}{{csh.Cylinder_Inward_Table.cylinder_GRN_no}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Inward_Table.cylinder_GRN_Date %}{{csh.Cylinder_Inward_Table.cylinder_GRN_Date|date:'d-m-Y'}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Inward_Table.cylinder_Invoice_DC_no %}{{csh.Cylinder_Inward_Table.cylinder_Invoice_DC_no}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Inward_Table.cylinder_description %}{{csh.Cylinder_Inward_Table.cylinder_description}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.cylinder_Inward_Date %}{{csh.cylinder_Inward_Date|date:'d-m-Y | h:i A'}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.cylinder_stocked_in_Date %}{{csh.cylinder_stocked_in_Date|date:'d-m-Y | h:i A'}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.cylinder_Outward_Date %}{{csh.cylinder_Outward_Date|date:'d-m-Y | h:i A'}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.cylinder_stock_out_Date %}{{csh.cylinder_stock_out_Date|date:'d-m-Y | h:i A'}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Outward_Table.cylinder_return_DC %}{{csh.Cylinder_Outward_Table.cylinder_return_DC}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">
+                      {% if csh.Cylinder_Outward_Table.cylinder_remarks %}{{csh.Cylinder_Outward_Table.cylinder_remarks}}{% else %}NA{% endif %}
+                    </td>
+                    <td class="text-center">{{csh.cylinder_scanned_r_submitted_by}}</td>
+                  </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                  <td colspan="16">No entries found</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table><!-- End Bordered Table -->
+          </div>
+          {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock User-Body %}
+
+{% block User-Scripts %}
+<script>
+  $(document).ready(function(){
+    $('#from_date').on('change', function() {
+      var userDate = new Date($(this).val());
+      var today = new Date();
+      if (userDate > today) {
+        $(this).val('').addClass('border-danger text-danger');
+        $('#incorrect-start-date').show();
+        $('#to_date').val('');
+      }else{
+        $('#to_date').val($(this).val());
+        $(this).removeClass('border-danger text-danger');
+        $('#incorrect-start-date').hide();
+      }
+    });
+    $('#to_date').on('change', function() {
+      var userDate = new Date($(this).val());
+      var today = new Date();
+      if (userDate > today) {
+        $(this).val('').addClass('border-danger text-danger');
+        $('#incorrect-end-date').show();
+        // $('#from_date').val('');
+      }else{
+        $('#from_date').val($(this).val());
+        $(this).removeClass('border-danger text-danger');
+        $('#incorrect-end-date').hide();
+      }
+    });
+  });
+</script>
+{% endblock User-Scripts %}

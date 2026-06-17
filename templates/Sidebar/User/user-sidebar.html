@@ -1,0 +1,30 @@
+{% load static %}
+<aside id="sidebar" class="sidebar">
+  <ul class="sidebar-nav" id="sidebar-nav">
+    <li class="nav-item">
+      <a class="nav-link {% if not dashboard_content %}collapsed{% endif %}" href="{% url 'Cylinder-Stock-Dashboard' %}" >
+        <i class="bi bi-grid"></i>
+        <span>Dashboard</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if not cylinder_inward_form %}collapsed{% endif %}" href="{% url 'Cylinder-Inward-Form' %}" >
+        <i class="bi bi-box-arrow-down"></i>
+        <span>Cylinder Inward</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if not cylinder_outward_form %}collapsed{% endif %}" href="{% url 'Cylinder-Outward-Form' %}" >
+        <i class="bi bi-box-arrow-up"></i>
+        <span>Cylinder Outward</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if not cylinder_inward_outward_history %}collapsed{% endif %}" href="{% url 'Cylinder-Inward-Outward-History' %}" >
+        <i class="bi bi-journal-album"></i>
+        <span>Inward / Outward Report</span>
+      </a>
+    </li>
+    <li class="nav-item"><a class="nav-link collapsed" href="{% url 'Logout' %}"><i class="bi bi-box-arrow-in-right"></i><span>Logout</span></a></li>
+  </ul>
+</aside>

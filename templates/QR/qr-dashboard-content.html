@@ -1,0 +1,63 @@
+{% extends 'Dashboard/User/user-dashboard.html' %}
+
+{% load static %}
+
+{% block User-Head %}
+{% endblock User-Head %}
+
+{% block User-Body %}
+<div id="preloader"></div>
+<section class="section">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title text-center mt-3 mb-0 pb-0"><b>Cylinder Stock</b></h4>
+          <p class="text-center text-danger font-bold"> (as of {{tdate}})</p>
+          <hr>
+          <div class=" d-flex justify-content-end">
+            <a class="btn btn-submit text-white me-3" href="{% url 'Cylinder-Inward-Form' %}"><i class="bi bi-box-arrow-down"></i> Inward</a>
+            <a class="btn btn-danger text-white" href="{% url 'Cylinder-Outward-Form' %}"><i class="bi bi-box-arrow-up"></i> Outward</a>
+          </div>
+          <br>
+          <!-- Bordered Table -->
+          <div class="table-responsive">
+            <table class="table datatable table-striped table-bordered" id="stock-table">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-center">#</th>
+                  <th class="text-center">Cylinder Type</th>
+                  <th class="text-center">Avaliable Stock</th>
+                </tr>
+              </thead>
+              <tbody class="text-center">
+                <tr>
+                  <td colspan="3">
+                    <span class="spinner-border loader spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Loading...
+                  </td>
+                </tr>
+              </tbody>
+            </table><!-- End Bordered Table -->
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock User-Body %}
+
+{% block User-Scripts %}
+<script>
+  $(document).ready(function() {
+    var sl = 1;
+    var gasData = {{ stock|safe }};
+    var table = $('#stock-table');
+    setTimeout(() => {
+      table.find(' tbody tr:first').remove();
+      $.each(gasData.gasCylinder_stock, function(gasType, stock) {
+        table.append('<tr><td>'+(sl++)+'</td><td>' + gasType + '</td><td>' + stock + '</td></tr>');
+      });
+    }, 400);
+  });
+</script>
+{% endblock User-Scripts %}
