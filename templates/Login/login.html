@@ -34,48 +34,43 @@
 
 <body class="login-page" style="--login-bg-image: url({% static 'img/cylinder-master-login-bg.png' %});">
   <main class="login-main">
-    <section class="login-shell">
-      <div class="login-brand-panel">
-        <div class="login-logo-frame">
-          <img src="{% static 'img/cylinder-master-login-logo.png' %}" alt="Cylinder Master logo" class="login-logo">
+    <section class="next-login-shell" aria-label="Cylinder Master login">
+      <div class="next-login-card">
+        <div class="next-login-logo-wrap">
+          <img src="{% static 'img/cylinder-master-login-logo.png' %}" alt="Cylinder Master logo" class="next-login-logo">
         </div>
-      </div>
 
-      <div class="login-card-panel">
-        <div class="login-card">
-          <div class="login-card-header">
-            <span class="login-kicker">Cylinder Master</span>
-            <h1>Sign in</h1>
+        <div class="next-login-header">
+          <h1>Welcome back</h1>
+        </div>
+
+        <form action="{% url 'Login-Auth' %}" method="post" class="next-login-form needs-validation" novalidate>
+          {% csrf_token %}
+          <div class="next-field">
+            <label for="username" class="form-label">Username</label>
+            <div class="next-input-wrap">
+              <i class="fa fa-user"></i>
+              <input type="text" name="username" class="form-control" id="username" autocomplete="username" required>
+              <div class="invalid-feedback">Please enter your username.</div>
+            </div>
           </div>
 
-          <form action="{% url 'Login-Auth' %}" method="post" class="row g-3 needs-validation" novalidate>
-            {% csrf_token %}
-            <div class="col-12">
-              <label for="username" class="form-label">Username</label>
-              <div class="input-group has-validation login-input-group">
-                <span class="input-group-text"><i class="fa fa-user"></i></span>
-                <input type="text" name="username" class="form-control" id="username" autocomplete="username" required>
-                <div class="invalid-feedback">Please enter your username.</div>
-              </div>
+          <div class="next-field">
+            <label for="password" class="form-label">Password</label>
+            <div class="next-input-wrap">
+              <i class="fa fa-lock"></i>
+              <input type="password" name="password" class="form-control" id="password" autocomplete="current-password" required>
+              <div class="invalid-feedback">Please enter your password.</div>
             </div>
-            <div class="col-12">
-              <label for="password" class="form-label">Password</label>
-              <div class="input-group has-validation login-input-group">
-                <span class="input-group-text"><i class="fa fa-lock"></i></span>
-                <input type="password" name="password" class="form-control" id="password" autocomplete="current-password" required>
-                <div class="invalid-feedback">Please enter your password.</div>
-              </div>
-            </div>
-            <div class="col-12">
-              <button type="submit" class="btn login-submit w-100">Login <i class="fa fa-sign-in"></i></button>
-            </div>
-          </form>
-        </div>
+          </div>
 
-        <p class="login-copyright">
-          Copyright © <script>document.write(new Date().getFullYear());</script> Cylinder Master
-        </p>
+          <button type="submit" class="next-login-submit">Login <i class="fa fa-sign-in"></i></button>
+        </form>
       </div>
+
+      <p class="next-login-copyright">
+        Copyright © <script>document.write(new Date().getFullYear());</script> Cylinder Master
+      </p>
     </section>
   </main>
 

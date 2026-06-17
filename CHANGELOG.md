@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - Updated the UI theme to match the Cylinder Master teal, graphite, and green login background palette.
-- Rebuilt the login page with a modern two-panel layout and stronger logo contrast.
+- Rebuilt the login page with a Next.js-inspired auth card and stronger logo contrast.
 - Updated Cylinder Master logo assets to use the full logo with a softened transparent white background.
 - Rebranded remaining legacy UI references to Cylinder Master.
 - Replaced legacy login and navigation branding images with generated Cylinder Master assets.
