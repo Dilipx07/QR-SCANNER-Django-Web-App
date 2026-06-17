@@ -1578,6 +1578,135 @@ h6 {
 /* Table Custom Fonts */
 
 /*--------------------------------------------------------------
+# Cylinder Analytics Views
+--------------------------------------------------------------*/
+.page-heading {
+  color: var(--cm-teal-900);
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.analytics-page .card,
+.analytics-card {
+  border-radius: 8px;
+}
+
+.metric-card {
+  min-height: 108px;
+  padding: 18px;
+  border: 1px solid rgba(197, 216, 216, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--cm-shadow);
+}
+
+.metric-card span {
+  display: block;
+  color: #607276;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--cm-teal-900);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.metric-card-success strong {
+  color: var(--cm-green-dark);
+}
+
+.metric-card-warning strong {
+  color: var(--cm-warning);
+}
+
+.metric-card-danger strong {
+  color: var(--cm-danger);
+}
+
+.analytics-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(8, 121, 132, 0.1);
+  color: var(--cm-teal-700);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.insight-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.insight-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+  background: var(--cm-panel-soft);
+}
+
+.insight-item span {
+  color: #607276;
+  font-weight: 700;
+}
+
+.insight-item strong {
+  color: var(--cm-teal-900);
+  font-size: 20px;
+}
+
+.analytics-insights {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analytics-insights li {
+  padding: 12px 12px 12px 36px;
+  position: relative;
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--cm-ink);
+}
+
+.analytics-insights li::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  top: 17px;
+  left: 14px;
+  border-radius: 50%;
+  background: var(--cm-green);
+}
+
+.workflow-panel {
+  border: 1px solid rgba(197, 216, 216, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--cm-shadow);
+}
+
+.workflow-panel .table {
+  margin-bottom: 0;
+}
+
+/*--------------------------------------------------------------
 # Cylinder Master Theme
 --------------------------------------------------------------*/
 :root {

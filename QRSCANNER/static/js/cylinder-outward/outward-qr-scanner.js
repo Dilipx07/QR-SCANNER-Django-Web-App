@@ -415,7 +415,8 @@ $('#OutwardSubmit').on('click',function(){
               $('#preloader').fadeOut();
               $('body').removeAttr('style');
               console.error(status, error, 'Failed');
-              toastr.error('Outward Action Cannot be Completed', 'Failed');
+              const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Outward Action Cannot be Completed';
+              toastr.error(message, 'Failed');
           }
         });
       }

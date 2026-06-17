@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added inward/outward analytics dashboards with stock health, timing, vendor mix, and gas-type charts.
+- Rebuilt the inward/outward report as an intelligence view with KPI cards, charts, insights, and a detailed ledger.
+- Improved inward/outward stock-in and stock-out backend validation with clearer frontend error messages.
+- Added regression tests for cylinder analytics and stock workflow actions.
 - Replaced plaintext login checks with Django password hashing and session key rotation.
 - Added middleware to protect QR routes and auto logout expired sessions.
 - Updated security settings, authentication tests, and dependency pins after vulnerability scans.

@@ -28,12 +28,159 @@ import calendar
 import os
 from QR.models import *
 from django.utils import timezone
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from django.db import transaction
+import logging
+
+logger = logging.getLogger(__name__)
 
 def current_ist_datetime():
     utc_datetime = timezone.now()
     ist = pytz.timezone('Asia/Kolkata')
     ist_datetime = utc_datetime.astimezone(ist)
     return ist_datetime
+
+def _date_label(value):
+    return value.strftime('%d %b') if value else 'Unknown'
+
+def _build_daily_movement_chart(queryset):
+    inward = {
+        item['day']: item['count']
+        for item in queryset.exclude(cylinder_Inward_Date__isnull=True)
+        .annotate(day=TruncDate('cylinder_Inward_Date'))
+        .values('day')
+        .annotate(count=Count('cylinder_db_id'))
+        .order_by('day')
+    }
+    outward = {
+        item['day']: item['count']
+        for item in queryset.exclude(cylinder_Outward_Date__isnull=True)
+        .annotate(day=TruncDate('cylinder_Outward_Date'))
+        .values('day')
+        .annotate(count=Count('cylinder_db_id'))
+        .order_by('day')
+    }
+    days = sorted(set(inward.keys()) | set(outward.keys()))
+    return {
+        'labels': [_date_label(day) for day in days],
+        'inward': [inward.get(day, 0) for day in days],
+        'outward': [outward.get(day, 0) for day in days],
+    }
+
+def _build_stock_type_chart(queryset):
+    rows = (
+        queryset.filter(
+            cylinder_Inward=True,
+            cylinder_stocked_in=True,
+            cylinder_Outward=False,
+            cylinder_stock_out=False,
+        )
+        .values('cylinder_gas_type__cylinder_gas_type')
+        .annotate(count=Count('cylinder_db_id'))
+        .order_by('cylinder_gas_type__cylinder_gas_type')
+    )
+    labels = [row['cylinder_gas_type__cylinder_gas_type'] or 'Unknown' for row in rows]
+    data = [row['count'] for row in rows]
+    return {'labels': labels, 'data': data}
+
+def _build_vendor_chart(queryset):
+    rows = (
+        queryset.filter(cylinder_Inward=True)
+        .values('cylinder_vendor_name__gas_cylinder_vendor_name')
+        .annotate(count=Count('cylinder_db_id'))
+        .order_by('-count')[:8]
+    )
+    labels = [row['cylinder_vendor_name__gas_cylinder_vendor_name'] or 'Unknown' for row in rows]
+    data = [row['count'] for row in rows]
+    return {'labels': labels, 'data': data}
+
+def _average_hours(queryset, start, end):
+    records = [
+        (getattr(item, start), getattr(item, end))
+        for item in queryset
+        if getattr(item, start) and getattr(item, end)
+    ]
+    if not records:
+        return 0
+    total_seconds = sum((end_value - start_value).total_seconds() for start_value, end_value in records)
+    return round((total_seconds / len(records)) / 3600, 1)
+
+def build_cylinder_analytics(queryset=None):
+    if queryset is None:
+        queryset = Cylinder_Store.objects.all()
+    available_filter = {
+        'cylinder_Inward': True,
+        'cylinder_Outward': False,
+        'cylinder_stocked_in': True,
+        'cylinder_stock_out': False,
+    }
+    pending_inward_filter = {
+        'cylinder_Inward': True,
+        'cylinder_Outward': False,
+        'cylinder_stocked_in': False,
+        'cylinder_stock_out': False,
+    }
+    pending_outward_filter = {
+        'cylinder_Inward': True,
+        'cylinder_Outward': True,
+        'cylinder_stocked_in': True,
+        'cylinder_stock_out': False,
+    }
+    available_stock = queryset.complex_filter(available_filter).count()
+    pending_inward = queryset.complex_filter(pending_inward_filter).count()
+    pending_outward = queryset.complex_filter(pending_outward_filter).count()
+    stock_out = queryset.filter(cylinder_stock_out=True).count()
+    total_cylinders = queryset.count()
+    risk_count = pending_outward + pending_inward
+    movement_chart = _build_daily_movement_chart(queryset)
+    stock_type_chart = _build_stock_type_chart(queryset)
+    vendor_chart = _build_vendor_chart(queryset)
+    top_type = 'No active stock'
+    if stock_type_chart['labels']:
+        max_index = stock_type_chart['data'].index(max(stock_type_chart['data']))
+        top_type = f"{stock_type_chart['labels'][max_index]} leads active stock with {stock_type_chart['data'][max_index]} cylinders"
+    return {
+        'summary': {
+            'total_cylinders': total_cylinders,
+            'available_stock': available_stock,
+            'pending_inward': pending_inward,
+            'pending_outward': pending_outward,
+            'stock_out': stock_out,
+            'risk_count': risk_count,
+            'stock_health': round((available_stock / total_cylinders) * 100, 1) if total_cylinders else 0,
+            'avg_stock_in_hours': _average_hours(queryset, 'cylinder_Inward_Date', 'cylinder_stocked_in_Date'),
+            'avg_stock_out_hours': _average_hours(queryset, 'cylinder_Outward_Date', 'cylinder_stock_out_Date'),
+        },
+        'charts': {
+            'movement': movement_chart,
+            'stock_by_type': stock_type_chart,
+            'vendor_mix': vendor_chart,
+        },
+        'insights': [
+            top_type,
+            f"{pending_inward} cylinders are scanned inward but not stocked in.",
+            f"{pending_outward} cylinders are outward-marked but not stock-out confirmed.",
+        ],
+    }
+
+def movement_date_filter(from_date=None, to_date=None):
+    fields = [
+        'cylinder_Inward_Date',
+        'cylinder_Outward_Date',
+        'cylinder_stocked_in_Date',
+        'cylinder_stock_out_Date',
+    ]
+    movement_query = Q()
+    for field in fields:
+        field_query = Q()
+        if from_date:
+            field_query &= Q(**{f'{field}__date__gte': from_date})
+        if to_date:
+            field_query &= Q(**{f'{field}__date__lte': to_date})
+        if from_date or to_date:
+            movement_query |= field_query
+    return movement_query
 
 def cylinder_vendor_master(request):
     if request.method == 'POST':
@@ -117,27 +264,16 @@ def cylinder_master_inward_qr_check(request):
 def cylinder_stock_dashboard(request):
     template = loader.get_template('QR/qr-dashboard-content.html')
     gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_id')
-    cylinder_stock_filter = {
-        'cylinder_Inward': True,
-        'cylinder_Outward': False,
-        'cylinder_stocked_in': True,
-        'cylinder_stock_out': False
-    }
     gas_cylinder_type = Cylinder_Type_Master.objects.order_by('cylinder_gas_type')
-    gasCylinder_stock = {}
-    for gasTypes in gas_cylinder_type:
-        cylinder_stock_filter['cylinder_gas_type'] = gasTypes.cylinder_type_id
-        count = Cylinder_Store.objects.complex_filter(cylinder_stock_filter).order_by('-cylinder_gas_type').count()
-        gasCylinder_stock[f'{gasTypes.cylinder_gas_type}'] = count
-        pass
+    analytics = build_cylinder_analytics()
     context = {
         'tdate': current_ist_datetime(),
         'dashboard_content': True,
         'gas_cylinder_type': gas_cylinder_type,
         'gas_cylinder_vendors':gas_cylinder_vendors,
-        'stock':{'gasCylinder_stock':gasCylinder_stock},
+        'analytics': analytics,
+        'analytics_json': json.dumps(analytics, cls=DjangoJSONEncoder),
     }
-    print(context)
     return HttpResponse(template.render(context,request))
 
 def cylinder_inward_form(request):
@@ -156,6 +292,7 @@ def cylinder_inward_form(request):
         'cylinder_inward_stock': cylinder_inward_stock,
         'gas_cylinder_type': gas_cylinder_type,
         'gas_cylinder_vendors':gas_cylinder_vendors,
+        'analytics': build_cylinder_analytics(),
     }
     return HttpResponse(template.render(context,request))
 
@@ -182,6 +319,7 @@ def cylinder_inward_submit(request):
         'cylinder_inward_stock': cylinder_inward_stock,
         'gas_cylinder_type': gas_cylinder_type,
         'gas_cylinder_vendors':gas_cylinder_vendors,
+        'analytics': build_cylinder_analytics(),
     }
     def setVar():
         context['po_no'] = po_no
@@ -237,7 +375,7 @@ def cylinder_inward_submit(request):
                     qr_scanner.save()
             return HttpResponse(template.render(context,request))
         except Exception as e:
-            print(e)
+            logger.exception("Cylinder inward scan failed.")
             return HttpResponse(template.render(context,request))
     try:
         Inward_det = Cylinder_Inward_Details.objects
@@ -267,7 +405,7 @@ def cylinder_inward_submit(request):
         setVar()
         return HttpResponse(template.render(context,request))
     except Exception as e:
-        print('Error: Duplicate Key',e)
+        logger.exception("Cylinder inward detail creation failed.")
         if 'po_no' in str(e):
             context['error'] = 'PO Already Exists'
         elif 'GRN_no' in str(e):
@@ -287,11 +425,21 @@ def cylinder_inward_remove(request):
 def cylinder_stock_in(request):
     if request.method == 'POST':
         inward_selected = request.POST.getlist('selectedinward[]')
-        for inward_c_id in inward_selected:
-            qr_scanner = Cylinder_Store.objects.filter(cylinder_db_id = inward_c_id)
-            qr_scanner.update(cylinder_stocked_in = True)
-            qr_scanner.update(cylinder_stocked_in_Date = current_ist_datetime())
-        return JsonResponse(data=True,safe=False,status=200)
+        if not inward_selected:
+            return JsonResponse({'success': False, 'message': 'Select at least one cylinder to stock in.'}, status=400)
+        updated_count = Cylinder_Store.objects.filter(
+            cylinder_db_id__in=inward_selected,
+            cylinder_Inward=True,
+            cylinder_Outward=False,
+            cylinder_stocked_in=False,
+            cylinder_stock_out=False,
+        ).update(
+            cylinder_stocked_in=True,
+            cylinder_stocked_in_Date=current_ist_datetime(),
+        )
+        if updated_count != len(inward_selected):
+            return JsonResponse({'success': False, 'message': 'Some selected cylinders are no longer pending inward.'}, status=409)
+        return JsonResponse({'success': True, 'updated': updated_count}, status=200)
     
 def cylinder_outward_form(request):
     template = loader.get_template('QR/Cylinder-Outward/cylinder-outward-form.html')
@@ -307,53 +455,73 @@ def cylinder_outward_form(request):
         'cylinder_outward_form': True,
         'cylinder_outward_stock': cylinder_outward_stock,
         'gas_cylinder_vendors':gas_cylinder_vendors,
+        'analytics': build_cylinder_analytics(),
     }
     return HttpResponse(template.render(context,request))
 
 def cylinder_outward_submit(request):
     if request.method == 'POST':
-        print(request.POST)
-        cylinder_id = int(request.POST.get('cylinder_sl_no') or request.POST.get('qr_sl_no_id'))
+        cylinder_id = request.POST.get('cylinder_sl_no') or request.POST.get('qr_sl_no_id')
         cylinder_gas_type = request.POST.get('cylinder_gas_type')
-        cylinder_gas_vendor = int(request.POST.get('cylinder_gas_vendor'))
-        cylinder_type_det = Cylinder_Type_Master.objects.get(cylinder_gas_type = cylinder_gas_type)
-        cylinder_filter = {
-            'cylinder_db_id': cylinder_id,
-            'cylinder_gas_type':cylinder_type_det,
-            'cylinder_vendor_name':cylinder_gas_vendor
-        }
-        cylinderInfo = Cylinder_Store.objects.complex_filter(cylinder_filter)
-        cylinderInfo.update(cylinder_Outward = True)
-        cylinderInfo.update(cylinder_Outward_Date = current_ist_datetime())
+        cylinder_gas_vendor = request.POST.get('cylinder_gas_vendor')
+        if not cylinder_id or not cylinder_gas_type or not cylinder_gas_vendor:
+            raise Http404("Cylinder outward details are incomplete.")
+        cylinder_type_det = Cylinder_Type_Master.objects.get(cylinder_gas_type=cylinder_gas_type)
+        updated_count = Cylinder_Store.objects.filter(
+            cylinder_db_id=int(cylinder_id),
+            cylinder_gas_type=cylinder_type_det,
+            cylinder_vendor_name=int(cylinder_gas_vendor),
+            cylinder_Inward=True,
+            cylinder_Outward=False,
+            cylinder_stocked_in=True,
+            cylinder_stock_out=False,
+        ).update(
+            cylinder_Outward=True,
+            cylinder_Outward_Date=current_ist_datetime(),
+        )
+        if not updated_count:
+            raise Http404("Cylinder is not available for outward.")
         return redirect('Cylinder-Outward-Form')
 
 def cylinder_stock_out(request):
     if request.method == 'POST':
-        print(request.POST)
         outwardSelected = request.POST.getlist('outwardSelected[]')
         return_dc_no = request.POST.get('return_dc_no')
         return_remarks = request.POST.get('return_remarks')
-        outward_details = Cylinder_Outward_Details.objects.filter(cylinder_return_DC = return_dc_no)
-        if not outward_details.values():
-            Cylinder_Outward_Details.objects.update_or_create(
-                cylinder_return_DC = return_dc_no,
-                cylinder_remarks = return_remarks
+        if not outwardSelected:
+            return JsonResponse({'success': False, 'message': 'Select at least one cylinder to stock out.'}, status=400)
+        if not return_dc_no:
+            return JsonResponse({'success': False, 'message': 'Return DC number is required.'}, status=400)
+        with transaction.atomic():
+            outward_details, _ = Cylinder_Outward_Details.objects.update_or_create(
+                cylinder_return_DC=return_dc_no,
+                defaults={'cylinder_remarks': return_remarks}
             )
-        print(outward_details)
-        for outStockList in outwardSelected:
-            cylinder_out = Cylinder_Store.objects.filter(cylinder_db_id = outStockList)
-            cylinder_out.update(cylinder_stock_out = True)
-            cylinder_out.update(cylinder_stock_out_Date = current_ist_datetime())
-            cylinder_out.update(Cylinder_Outward_Table = outward_details.get())
-        
-        return JsonResponse(data=True,safe=False,status=200)
+            updated_count = Cylinder_Store.objects.filter(
+                cylinder_db_id__in=outwardSelected,
+                cylinder_Inward=True,
+                cylinder_Outward=True,
+                cylinder_stocked_in=True,
+                cylinder_stock_out=False,
+            ).update(
+                cylinder_stock_out=True,
+                cylinder_stock_out_Date=current_ist_datetime(),
+                Cylinder_Outward_Table=outward_details,
+            )
+            if updated_count != len(outwardSelected):
+                transaction.set_rollback(True)
+                return JsonResponse({'success': False, 'message': 'Some selected cylinders are no longer pending outward.'}, status=409)
+        return JsonResponse({'success': True, 'updated': updated_count}, status=200)
     
 def cylinder_inward_outward_history_table(request):
     template = loader.get_template('QR/Cylinder-History/cylinder-history.html')
     gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_id')
+    analytics = build_cylinder_analytics()
     context = {
         'cylinder_inward_outward_history': True,
         'gas_cylinder_vendors':gas_cylinder_vendors,
+        'analytics': analytics,
+        'analytics_json': json.dumps(analytics, cls=DjangoJSONEncoder),
     }
     return HttpResponse(template.render(context,request))
 
@@ -363,6 +531,7 @@ def cylinder_inward_outward_history_submit(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
     gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_id')
+    cylinder_stock_history = Cylinder_Store.objects.order_by('-cylinder_db_id')
     try:
         vendor_id = int(vendor_id)
         history_filter = {
@@ -375,12 +544,17 @@ def cylinder_inward_outward_history_submit(request):
         cylinder_stock_history = Cylinder_Store.objects.order_by('-cylinder_db_id')
         vendor_name = vendor_id
         pass
+    if from_date or to_date:
+        cylinder_stock_history = cylinder_stock_history.filter(movement_date_filter(from_date, to_date))
+    analytics = build_cylinder_analytics(cylinder_stock_history)
     context = {
         'cylinder_inward_outward_history': True,
         'gas_cylinder_vendors':gas_cylinder_vendors,
         'cylinder_stock_history':cylinder_stock_history,
         'vendor_name':vendor_name,
         'from_date':from_date,
-        'to_date':to_date
+        'to_date':to_date,
+        'analytics': analytics,
+        'analytics_json': json.dumps(analytics, cls=DjangoJSONEncoder),
     }
     return HttpResponse(template.render(context,request))

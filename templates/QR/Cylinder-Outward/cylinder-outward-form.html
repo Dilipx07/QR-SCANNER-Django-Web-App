@@ -20,6 +20,32 @@
           <span class="fa fa-arrow-circle-left"></span>&nbsp; Home
         </button>
       </a>
+      <div class="row g-3 mb-3">
+        <div class="col-lg-3 col-6">
+          <div class="metric-card metric-card-danger">
+            <span>Pending Outward</span>
+            <strong>{{ analytics.summary.pending_outward }}</strong>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="metric-card metric-card-success">
+            <span>Available Stock</span>
+            <strong>{{ analytics.summary.available_stock }}</strong>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="metric-card">
+            <span>Avg Stock-Out</span>
+            <strong>{{ analytics.summary.avg_stock_out_hours }}h</strong>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="metric-card">
+            <span>Stocked Out</span>
+            <strong>{{ analytics.summary.stock_out }}</strong>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="card-body">
           <h4 class="card-title text-center mt-3 mb-0 pb-0"><b>Outward List</b></h4><hr>

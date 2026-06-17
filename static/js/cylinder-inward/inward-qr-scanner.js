@@ -356,7 +356,8 @@ $('#InwardSubmit').on('click',function(){
         $('#preloader').fadeOut();
         $('body').removeAttr('style');
         console.error(status, error, 'Failed');
-        toastr.error('Inward Action Cannot be Completed', 'Failed');
+        const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Inward Action Cannot be Completed';
+        toastr.error(message, 'Failed');
       }
     });
   }
@@ -410,7 +411,8 @@ $('#inward-exit').on('click',function(){
             $('#preloader').fadeOut();
             $('body').removeAttr('style');
             console.error(status, error, 'Failed');
-            toastr.error('Inward Action Cannot be Completed', 'Failed');
+            const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Inward Action Cannot be Completed';
+            toastr.error(message, 'Failed');
           }
         });
           // window.location.href="/QR/Dashboard";

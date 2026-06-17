@@ -7,39 +7,117 @@
 
 {% block User-Body %}
 <div id="preloader"></div>
-<section class="section">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
+<section class="section analytics-page">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h4 class="page-heading mb-1">Cylinder Stock Command Center</h4>
+      <p class="text-muted mb-0">Live stock, timing, and movement insights as of {{ tdate }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-submit text-white" href="{% url 'Cylinder-Inward-Form' %}"><i class="bi bi-box-arrow-down"></i> Inward</a>
+      <a class="btn btn-danger text-white" href="{% url 'Cylinder-Outward-Form' %}"><i class="bi bi-box-arrow-up"></i> Outward</a>
+      <a class="btn btn-view text-white" href="{% url 'Cylinder-Inward-Outward-History' %}"><i class="bi bi-graph-up"></i> Report</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="metric-card">
+        <span>Total Cylinders</span>
+        <strong>{{ analytics.summary.total_cylinders }}</strong>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="metric-card metric-card-success">
+        <span>Available Stock</span>
+        <strong>{{ analytics.summary.available_stock }}</strong>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="metric-card metric-card-warning">
+        <span>Pending Inward</span>
+        <strong>{{ analytics.summary.pending_inward }}</strong>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="metric-card metric-card-danger">
+        <span>Pending Outward</span>
+        <strong>{{ analytics.summary.pending_outward }}</strong>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="metric-card">
+        <span>Stocked Out</span>
+        <strong>{{ analytics.summary.stock_out }}</strong>
+      </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="metric-card">
+        <span>Stock Health</span>
+        <strong>{{ analytics.summary.stock_health }}%</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-xl-8">
+      <div class="card analytics-card">
         <div class="card-body">
-          <h4 class="card-title text-center mt-3 mb-0 pb-0"><b>Cylinder Stock</b></h4>
-          <p class="text-center text-danger font-bold"> (as of {{tdate}})</p>
-          <hr>
-          <div class=" d-flex justify-content-end">
-            <a class="btn btn-submit text-white me-3" href="{% url 'Cylinder-Inward-Form' %}"><i class="bi bi-box-arrow-down"></i> Inward</a>
-            <a class="btn btn-danger text-white" href="{% url 'Cylinder-Outward-Form' %}"><i class="bi bi-box-arrow-up"></i> Outward</a>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title m-0 p-0">Inward vs Outward Timing</h5>
+            <span class="analytics-pill">Daily movement</span>
           </div>
-          <br>
-          <!-- Bordered Table -->
-          <div class="table-responsive">
-            <table class="table datatable table-striped table-bordered" id="stock-table">
-              <thead class="table-light">
-                <tr>
-                  <th class="text-center">#</th>
-                  <th class="text-center">Cylinder Type</th>
-                  <th class="text-center">Avaliable Stock</th>
-                </tr>
-              </thead>
-              <tbody class="text-center">
-                <tr>
-                  <td colspan="3">
-                    <span class="spinner-border loader spinner-border-sm" role="status" aria-hidden="true"></span>
-                    Loading...
-                  </td>
-                </tr>
-              </tbody>
-            </table><!-- End Bordered Table -->
+          <canvas id="movementChart" height="130"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="card analytics-card">
+        <div class="card-body">
+          <h5 class="card-title m-0 p-0 mb-3">Stock By Gas Type</h5>
+          <canvas id="stockTypeChart" height="190"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="card analytics-card">
+        <div class="card-body">
+          <h5 class="card-title m-0 p-0 mb-3">Vendor Contribution</h5>
+          <canvas id="vendorChart" height="190"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="card analytics-card">
+        <div class="card-body">
+          <h5 class="card-title m-0 p-0 mb-3">Timing Insights</h5>
+          <div class="insight-stack">
+            <div class="insight-item">
+              <span>Avg stock-in time</span>
+              <strong>{{ analytics.summary.avg_stock_in_hours }} hrs</strong>
+            </div>
+            <div class="insight-item">
+              <span>Avg stock-out time</span>
+              <strong>{{ analytics.summary.avg_stock_out_hours }} hrs</strong>
+            </div>
+            <div class="insight-item">
+              <span>Open workflow load</span>
+              <strong>{{ analytics.summary.risk_count }}</strong>
+            </div>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="card analytics-card">
+        <div class="card-body">
+          <h5 class="card-title m-0 p-0 mb-3">Operational Insights</h5>
+          <ul class="analytics-insights">
+            {% for insight in analytics.insights %}
+              <li>{{ insight }}</li>
+            {% endfor %}
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -48,16 +126,76 @@
 
 {% block User-Scripts %}
 <script>
-  $(document).ready(function() {
-    var sl = 1;
-    var gasData = {{ stock|safe }};
-    var table = $('#stock-table');
-    setTimeout(() => {
-      table.find(' tbody tr:first').remove();
-      $.each(gasData.gasCylinder_stock, function(gasType, stock) {
-        table.append('<tr><td>'+(sl++)+'</td><td>' + gasType + '</td><td>' + stock + '</td></tr>');
-      });
-    }, 400);
+  const analytics = {{ analytics_json|safe }};
+  const chartColors = {
+    teal: '#087984',
+    green: '#4dae38',
+    graphite: '#20272d',
+    amber: '#d98222',
+    red: '#d94a3a',
+    softTeal: 'rgba(8, 121, 132, 0.14)',
+    softGreen: 'rgba(77, 174, 56, 0.16)'
+  };
+
+  new Chart(document.getElementById('movementChart'), {
+    type: 'line',
+    data: {
+      labels: analytics.charts.movement.labels,
+      datasets: [
+        {
+          label: 'Inward',
+          data: analytics.charts.movement.inward,
+          borderColor: chartColors.teal,
+          backgroundColor: chartColors.softTeal,
+          fill: true,
+          tension: 0.35
+        },
+        {
+          label: 'Outward',
+          data: analytics.charts.movement.outward,
+          borderColor: chartColors.green,
+          backgroundColor: chartColors.softGreen,
+          fill: true,
+          tension: 0.35
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  new Chart(document.getElementById('stockTypeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: analytics.charts.stock_by_type.labels,
+      datasets: [{
+        data: analytics.charts.stock_by_type.data,
+        backgroundColor: ['#087984', '#4dae38', '#20272d', '#d98222', '#75b7bd', '#8bcf7c']
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  new Chart(document.getElementById('vendorChart'), {
+    type: 'bar',
+    data: {
+      labels: analytics.charts.vendor_mix.labels,
+      datasets: [{
+        label: 'Cylinder count',
+        data: analytics.charts.vendor_mix.data,
+        backgroundColor: chartColors.teal,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
   });
 </script>
 {% endblock User-Scripts %}

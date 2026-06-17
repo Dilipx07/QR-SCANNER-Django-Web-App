@@ -6,11 +6,11 @@ QRSCANNER is the Gas Cylinder Scanner, a Django application for managing gas cyl
 
 - Login and logout flow backed by the `Login` app with Django password hashing.
 - Protected QR routes with automatic logout after session expiry.
-- Cylinder stock dashboard at `/QR/Dashboard`.
+- Cylinder stock dashboard at `/QR/Dashboard` with stock health, inward/outward timing, vendor mix, and gas-type charts.
 - Cylinder vendor and gas type lookup endpoints.
-- Cylinder inward form, QR validation, submission, and removal.
-- Cylinder outward form, QR validation, submission, and stock-out handling.
-- Inward/outward history filtering by vendor and date fields.
+- Cylinder inward form, QR validation, submission, stock-in status cards, and removal.
+- Cylinder outward form, QR validation, submission, stock-out status cards, and return DC handling.
+- Inward/outward intelligence report with filters, KPI cards, charts, insights, and a detailed movement ledger.
 - Seeded gas cylinder type master data through Django migrations.
 - PostgreSQL database configuration through environment variables.
 
@@ -113,7 +113,7 @@ QR workflow routes under `/QR/` require a valid login session. Sessions are refr
 - `/QR/Dashboard` - Cylinder stock dashboard
 - `/QR/Cylinder-Inward-Form` - Cylinder inward workflow
 - `/QR/Cylinder-Outward-Form` - Cylinder outward workflow
-- `/QR/Cylinder-Inward-Outward-History` - Cylinder history view
+- `/QR/Cylinder-Inward-Outward-History` - Cylinder inward/outward intelligence report
 
 ## Database Notes
 
