@@ -13,6 +13,7 @@ QRSCANNER is the Gas Cylinder Scanner, a Django application for managing gas cyl
 - Inward/outward intelligence report with filters, KPI cards, charts, insights, and a detailed movement ledger.
 - Seeded gas cylinder type master data through Django migrations.
 - PostgreSQL database configuration through environment variables.
+- Optional SQLite database mode through `DB_ENGINE=sqlite`.
 - Render-ready deployment blueprint with `/health/` monitoring and a 5-second internal health-check scheduler.
 
 ## Tech Stack
@@ -79,6 +80,8 @@ DB_USER=postgres
 DB_USER_PASSWORD=change-me
 DB_HOST=127.0.0.1
 DB_PORT=5432
+DB_ENGINE=postgresql
+SQLITE_NAME=db.sqlite3
 SECRET_KEY=change-me-to-a-long-random-secret
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
@@ -137,7 +140,11 @@ The app also starts a lightweight scheduler in server processes. By default it h
 
 ## Database Notes
 
-This project is configured for PostgreSQL in `QRSCANNER/settings.py`. The required database values are loaded from `.env`.
+This project keeps PostgreSQL support in `QRSCANNER/settings.py`. Use `DB_ENGINE=postgresql` with `DB_NAME`, `DB_USER`, `DB_USER_PASSWORD`, `DB_HOST`, and `DB_PORT` for PostgreSQL.
+
+Use `DB_ENGINE=sqlite` to run with SQLite. On Render, the included `render.yaml` uses SQLite at `/opt/render/project/src/db.sqlite3`.
+
+Render filesystem storage is not a durable database strategy. SQLite is acceptable for a quick proof of deployment, but production data should move back to PostgreSQL or a persistent disk.
 
 Do not commit `.env`, `db.sqlite3`, virtual environments, logs, or Python cache files. The repository includes `.gitignore` rules for these local artifacts.
 
@@ -148,7 +155,7 @@ Do not commit `.env`, `db.sqlite3`, virtual environments, logs, or Python cache 
 - Set `SESSION_COOKIE_SECURE=True`, `CSRF_COOKIE_SECURE=True`, and `SECURE_SSL_REDIRECT=True` when serving over HTTPS.
 - Configure production static file serving.
 - Keep `/health/` publicly reachable for Render health checks.
-- Use a production PostgreSQL database.
+- Use a production PostgreSQL database for durable production data.
 - Review session settings and cookie security options.
 - Create a real admin route only if the deployment requires Django admin access.
 

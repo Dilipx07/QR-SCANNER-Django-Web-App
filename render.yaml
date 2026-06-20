@@ -11,6 +11,10 @@ services:
         value: 3.11.9
       - key: DEBUG
         value: "False"
+      - key: DB_ENGINE
+        value: "sqlite"
+      - key: SQLITE_NAME
+        value: "/opt/render/project/src/db.sqlite3"
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
@@ -29,27 +33,3 @@ services:
         value: "31536000"
       - key: SECRET_KEY
         generateValue: true
-      - key: DB_NAME
-        fromDatabase:
-          name: qrscanner-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: qrscanner-db
-          property: user
-      - key: DB_USER_PASSWORD
-        fromDatabase:
-          name: qrscanner-db
-          property: password
-      - key: DB_HOST
-        fromDatabase:
-          name: qrscanner-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: qrscanner-db
-          property: port
-
-databases:
-  - name: qrscanner-db
-    plan: free
