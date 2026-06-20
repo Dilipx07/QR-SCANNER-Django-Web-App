@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: bash build.sh
-    startCommand: python manage.py migrate && gunicorn QRSCANNER.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    startCommand: python manage.py migrate && python manage.py seed_scanner_login && gunicorn QRSCANNER.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     healthCheckPath: /health/
     envVars:
       - key: PYTHON_VERSION
@@ -33,3 +33,7 @@ services:
         value: "31536000"
       - key: SECRET_KEY
         generateValue: true
+      - key: QRSCANNER_LOGIN_USERNAME
+        value: "admin"
+      - key: QRSCANNER_LOGIN_PASSWORD
+        value: "ChangeMe123!"

@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.shortcuts import render, redirect, HttpResponse
 from django.contrib import messages
@@ -5,6 +7,8 @@ from django.contrib.auth import logout
 from django.middleware.csrf import rotate_token
 from django.template import loader
 from Login.models import qr_scanner_login
+
+logger = logging.getLogger(__name__)
 
 
 def login(request):
@@ -43,22 +47,26 @@ def Logout(request):
     return redirect('Login')
         
 def LoginAuth(request):
-    if request.method != 'POST':
+    try:
+        if request.method != 'POST':
+            return redirect('Login')
+
+        login_user = (request.POST.get('username') or '').strip()
+        login_pass = request.POST.get('password') or ''
+        user = qr_scanner_login.objects.filter(qr_scanned_name=login_user).first()
+
+        if user and user.check_password(login_pass):
+            request.session.cycle_key()
+            rotate_token(request)
+            request.session['User_Name'] = user.qr_scanned_name
+            request.session['Login_id'] = user.qr_scanned_name
+            request.session['Dashboard'] = 'QR-Dashboard'
+            request.session['auth_last_activity'] = int(__import__('time').time())
+            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+            return redirect('Cylinder-Stock-Dashboard')
+
+        messages.error(request, 'Invalid Username / Password')
         return redirect('Login')
-
-    login_user = (request.POST.get('username') or '').strip()
-    login_pass = request.POST.get('password') or ''
-    user = qr_scanner_login.objects.filter(qr_scanned_name=login_user).first()
-
-    if user and user.check_password(login_pass):
-        request.session.cycle_key()
-        rotate_token(request)
-        request.session['User_Name'] = user.qr_scanned_name
-        request.session['Login_id'] = user.qr_scanned_name
-        request.session['Dashboard'] = 'QR-Dashboard'
-        request.session['auth_last_activity'] = int(__import__('time').time())
-        request.session.set_expiry(settings.SESSION_COOKIE_AGE)
-        return redirect('Cylinder-Stock-Dashboard')
-
-    messages.error(request, 'Invalid Username / Password')
-    return redirect('Login')
+    except Exception:
+        logger.exception('Login authentication failed with an unexpected error')
+        raise

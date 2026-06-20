@@ -138,6 +138,8 @@ Deploy from the Render dashboard using the repository Blueprint. Render will pro
 
 The app also starts a lightweight scheduler in server processes. By default it hits `/health/` every 5 seconds using `HEALTH_CHECK_URL`, `RENDER_EXTERNAL_HOSTNAME`, or the local `$PORT` fallback. Set `HEALTH_CHECK_SCHEDULER_ENABLED=False` to disable it.
 
+Render startup also runs `python manage.py seed_scanner_login`. Set `QRSCANNER_LOGIN_USERNAME` and `QRSCANNER_LOGIN_PASSWORD` in Render to control the initial scanner login. The blueprint default is `admin` / `ChangeMe123!`; rotate it immediately.
+
 ## Database Notes
 
 This project keeps PostgreSQL support in `QRSCANNER/settings.py`. Use `DB_ENGINE=postgresql` with `DB_NAME`, `DB_USER`, `DB_USER_PASSWORD`, `DB_HOST`, and `DB_PORT` for PostgreSQL.
