@@ -44,6 +44,7 @@ if not SECRET_KEY:
     SECRET_KEY = secrets.token_urlsafe(64)
 
 ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost', 'testserver'])
+CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS', [])
 
 
 # Application definition
@@ -55,12 +56,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'Health.apps.HealthConfig',
     'QR.apps.QrConfig',
     'Login',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -151,10 +154,20 @@ PDF_FILES = os.path.join(BASE_DIR,'PDF Files')
 STATIC_URL = 'static/'
 
 # The following Line is to specify django where the html static files(ex: css/js/scss/img/vendor/bootstrap) are located
-STATICFILES_DIRS = [os.path.join(BASE_DIR,'QRSCANNER/static'),]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'QRSCANNER/static'),
+]
 
 # This is a root/path for static files directory used in production server.
-STATIC_ROOT = os.path.join(BASE_DIR,'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'static/images')
 
@@ -173,6 +186,7 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', not DEBUG)
 CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', not DEBUG)
 SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', not DEBUG)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0' if DEBUG else '31536000'))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', not DEBUG)
 SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', not DEBUG)

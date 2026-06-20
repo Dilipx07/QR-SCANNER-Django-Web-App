@@ -13,6 +13,7 @@ QRSCANNER is the Gas Cylinder Scanner, a Django application for managing gas cyl
 - Inward/outward intelligence report with filters, KPI cards, charts, insights, and a detailed movement ledger.
 - Seeded gas cylinder type master data through Django migrations.
 - PostgreSQL database configuration through environment variables.
+- Render-ready deployment blueprint with `/health/` monitoring and a 5-second internal health-check scheduler.
 
 ## Tech Stack
 
@@ -81,7 +82,11 @@ DB_PORT=5432
 SECRET_KEY=change-me-to-a-long-random-secret
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
+CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,http://localhost:8000
 SESSION_COOKIE_AGE=86400
+HEALTH_CHECK_INTERVAL_SECONDS=5
+HEALTH_CHECK_SCHEDULER_ENABLED=True
+HEALTH_CHECK_URL=http://127.0.0.1:8000/health/
 ```
 
 Apply database migrations:
@@ -114,6 +119,19 @@ QR workflow routes under `/QR/` require a valid login session. Sessions are refr
 - `/QR/Cylinder-Inward-Form` - Cylinder inward workflow
 - `/QR/Cylinder-Outward-Form` - Cylinder outward workflow
 - `/QR/Cylinder-Inward-Outward-History` - Cylinder inward/outward intelligence report
+- `/health/` - JSON health-check endpoint for Render and uptime monitoring
+
+## Render Deployment
+
+The repository includes the files Render needs:
+
+- `render.yaml` - Blueprint for the Django web service and PostgreSQL database.
+- `build.sh` - Installs dependencies and runs `collectstatic`.
+- `requirements.txt` - Includes `gunicorn` for production WSGI and `whitenoise` for static files.
+
+Deploy from the Render dashboard using the repository Blueprint. Render will provision `qrscanner-db`, inject database credentials, run migrations on service start, and monitor `/health/`.
+
+The app also starts a lightweight scheduler in server processes. By default it hits `/health/` every 5 seconds using `HEALTH_CHECK_URL`, `RENDER_EXTERNAL_HOSTNAME`, or the local `$PORT` fallback. Set `HEALTH_CHECK_SCHEDULER_ENABLED=False` to disable it.
 
 ## Database Notes
 
@@ -127,6 +145,7 @@ Do not commit `.env`, `db.sqlite3`, virtual environments, logs, or Python cache 
 - Set `DEBUG=False` in production.
 - Set `SESSION_COOKIE_SECURE=True`, `CSRF_COOKIE_SECURE=True`, and `SECURE_SSL_REDIRECT=True` when serving over HTTPS.
 - Configure production static file serving.
+- Keep `/health/` publicly reachable for Render health checks.
 - Use a production PostgreSQL database.
 - Review session settings and cookie security options.
 - Create a real admin route only if the deployment requires Django admin access.

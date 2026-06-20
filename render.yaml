@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: qrscanner
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: python manage.py migrate && gunicorn QRSCANNER.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    healthCheckPath: /health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: HEALTH_CHECK_INTERVAL_SECONDS
+        value: "5"
+      - key: HEALTH_CHECK_SCHEDULER_ENABLED
+        value: "True"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_NAME
+        fromDatabase:
+          name: qrscanner-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: qrscanner-db
+          property: user
+      - key: DB_USER_PASSWORD
+        fromDatabase:
+          name: qrscanner-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: qrscanner-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: qrscanner-db
+          property: port
+
+databases:
+  - name: qrscanner-db
+    plan: free
