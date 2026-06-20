@@ -89,6 +89,8 @@ HEALTH_CHECK_SCHEDULER_ENABLED=True
 HEALTH_CHECK_URL=http://127.0.0.1:8000/health/
 ```
 
+`DEBUG` defaults to `False` when it is not set. Keep `DEBUG=True` only in local development.
+
 Apply database migrations:
 
 ```bash
