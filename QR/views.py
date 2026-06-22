@@ -225,6 +225,16 @@ def _vendor_options():
         .values('gas_cylinder_vendor_id', 'gas_cylinder_vendor_name')
     )
 
+def _resolve_gas_vendor(vendor_value):
+    if not vendor_value:
+        return None
+    vendor_value = str(vendor_value).strip()
+    if not vendor_value:
+        return None
+    if vendor_value.isdigit():
+        return Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_id=int(vendor_value)).first()
+    return Gas_Cylinder_Vendors_Master.objects.filter(gas_cylinder_vendor_name__iexact=vendor_value).first()
+
 def _serialize_cylinder_record(record):
     return {
         'id': record.cylinder_db_id,
@@ -419,6 +429,7 @@ def cylinder_inward_submit(request):
     cylinder_inward_stock = Cylinder_Store.objects.order_by('-cylinder_db_id').complex_filter(cylinder_inward_filter)
     gas_cylinder_type = Cylinder_Type_Master.objects.order_by('cylinder_type_id')
     gas_cylinder_vendors = Gas_Cylinder_Vendors_Master.objects.order_by('gas_cylinder_vendor_id')
+    selected_vendor = _resolve_gas_vendor(vendor_id)
     context = {
         'cylinder_inward_form': True,
         'cylinder_inward_stock': cylinder_inward_stock,
@@ -433,7 +444,7 @@ def cylinder_inward_submit(request):
         context['grn_date'] = grn_date
         context['invoice_r_dc_no'] = invoice_r_dc_no
         context['description'] = description
-        context['vendor_id'] = int(vendor_id)
+        context['vendor_id'] = selected_vendor.gas_cylinder_vendor_id if selected_vendor else vendor_id
         pass
     if request.method == 'POST':
         cylinder_inward_details_filter = {
@@ -447,7 +458,11 @@ def cylinder_inward_submit(request):
         try:
             cylinderInwardTable = Cylinder_Inward_Details.objects.complex_filter(cylinder_inward_details_filter).get()
             qr_sl_number = request.POST.get('cylinder_sl_no') or request.POST.get('qr_sl_number')
-            vendor = Gas_Cylinder_Vendors_Master.objects.get(gas_cylinder_vendor_id = int(request.POST.get('cylinder_gas_vendor')))
+            vendor = _resolve_gas_vendor(request.POST.get('cylinder_gas_vendor'))
+            if not vendor:
+                context['error'] = 'Please select a valid vendor.'
+                setVar()
+                return HttpResponse(template.render(context,request), status=400)
             gas_cylinder_type = Cylinder_Type_Master.objects.get(cylinder_type_id = int(request.POST.get('cylinder_gas_type')))
             qr_scanned_by = request.session.get('Login_id')
             context['inward_table'] = True
@@ -482,6 +497,10 @@ def cylinder_inward_submit(request):
         except Exception as e:
             logger.exception("Cylinder inward scan failed.")
             return HttpResponse(template.render(context,request))
+    if not selected_vendor:
+        context['error'] = 'Please select a valid vendor.'
+        setVar()
+        return HttpResponse(template.render(context,request), status=400)
     try:
         Inward_det = Cylinder_Inward_Details.objects
         Inward_det.update_or_create(
