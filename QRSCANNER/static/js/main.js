@@ -61,6 +61,7 @@
     const isOpen = isSidebarOpen()
     body.classList.toggle('sidebar-open', isOpen)
     body.classList.toggle('sidebar-closed', !isOpen)
+    body.classList.toggle('sidebar-scroll-locked', isOpen)
     sidebarToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
     const icon = sidebarToggle.querySelector('i')
     if (icon) {
@@ -87,6 +88,7 @@
   mobileSidebarQuery.addEventListener('change', () => {
     body.classList.remove('sidebar-open')
     body.classList.remove('sidebar-closed')
+    body.classList.remove('sidebar-scroll-locked')
     syncSidebarToggleIcon()
   })
 

@@ -2973,6 +2973,23 @@ a:hover {
   transform: translateX(-100%);
 }
 
+body.sidebar-scroll-locked {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+body.sidebar-scroll-locked #main,
+body.sidebar-scroll-locked #footer {
+  pointer-events: none;
+}
+
+body.sidebar-scroll-locked .sidebar,
+body.sidebar-scroll-locked .sidebar-backdrop,
+body.sidebar-scroll-locked .header,
+body.sidebar-scroll-locked .sidebar-floating-toggle {
+  pointer-events: auto;
+}
+
 @media (min-width: 1200px) {
   #main,
   #footer {
