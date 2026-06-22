@@ -24,25 +24,25 @@
         <div class="col-lg-3 col-6">
           <div class="metric-card metric-card-danger">
             <span>Pending Outward</span>
-            <strong>{{ analytics.summary.pending_outward }}</strong>
+            <strong data-outward-metric="pending_outward">{{ analytics.summary.pending_outward }}</strong>
           </div>
         </div>
         <div class="col-lg-3 col-6">
           <div class="metric-card metric-card-success">
             <span>Available Stock</span>
-            <strong>{{ analytics.summary.available_stock }}</strong>
+            <strong data-outward-metric="available_stock">{{ analytics.summary.available_stock }}</strong>
           </div>
         </div>
         <div class="col-lg-3 col-6">
           <div class="metric-card">
             <span>Avg Stock-Out</span>
-            <strong>{{ analytics.summary.avg_stock_out_hours }}h</strong>
+            <strong data-outward-metric="avg_stock_out_hours">{{ analytics.summary.avg_stock_out_hours }}h</strong>
           </div>
         </div>
         <div class="col-lg-3 col-6">
           <div class="metric-card">
             <span>Stocked Out</span>
-            <strong>{{ analytics.summary.stock_out }}</strong>
+            <strong data-outward-metric="stock_out">{{ analytics.summary.stock_out }}</strong>
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@
                   </th>
                 </tr>
               </thead>
-              <tbody class="text-center">
+              <tbody class="text-center" data-outward-table-body>
                 {% for csh in cylinder_outward_stock %}
                   <tr>
                     <td class="text-center">{{ forloop.counter }}</td>
@@ -98,7 +98,6 @@
               </tfoot>
             </table><!-- End Bordered Table -->
           </div>
-          {% if cylinder_outward_stock %}
           <form id="outward-dc-form" class="needs-validation" action="#" method="post" enctype="multipart/form-data" novalidate="novalidate"> 
             <div class="row ">
               <div class="col-6">
@@ -118,7 +117,6 @@
             </div>
             <button style="display: none;" type="submit" id="outward-dc-form-submit"></button>
           </form>
-          {% endif %}
           <!-- QR Scanner -->
           <div class="modal fade" id="QR-Scanner" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true" style="display: none;">
             <div class="modal-dialog">
@@ -191,7 +189,7 @@
                   {% csrf_token %}
                   <div class="mt-1">
                     <label for="cylinder_gas_vendor" class="form-label">Vendor Name :</label>
-                    <select name="cylinder_gas_vendor" id="cylinder_gas_vendor" class="form-select" required>
+                    <select name="cylinder_gas_vendor" id="cylinder_gas_vendor" class="form-select" required data-vendor-select>
                       <option value disabled selected>Select Vendor</option>
                       {% for gcv in gas_cylinder_vendors %}
                         <option value="{{gcv.gas_cylinder_vendor_id}}">{{gcv.gas_cylinder_vendor_name}}</option>
@@ -237,7 +235,6 @@
 {% block User-Scripts %}
 <script src="{% static 'js/qr-scanner/qr-scanner.min.js' %}"></script>
 <script src="{% static 'js/cylinder-outward/outward-qr-scanner.js' %}"></script>
-{% if cylinder_outward_stock %}
 <script>
   $(document).ready(function(){
     $('#return_dc_no').val(localStorage.getItem('return_dc_no'));
@@ -250,10 +247,78 @@
     });
   });
 </script>
-{% else %}
 <script>
-  localStorage.removeItem('return_dc_no');
-  localStorage.removeItem('return_remarks');
+  (function () {
+    const tableBody = document.querySelector('[data-outward-table-body]');
+    const vendorSelect = document.querySelector('[data-vendor-select]');
+    const formatMetric = (key, value) => key === 'avg_stock_out_hours' ? `${value || 0}h` : value;
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+
+    const setMetric = (key, value) => {
+      const target = document.querySelector(`[data-outward-metric="${key}"]`);
+      if (target) target.textContent = formatMetric(key, value);
+    };
+
+    const renderVendors = (vendors) => {
+      if (!vendorSelect) return;
+      vendorSelect.innerHTML = '<option value disabled selected>Select Vendor</option>';
+      vendors.forEach((vendor) => {
+        const option = document.createElement('option');
+        option.value = vendor.gas_cylinder_vendor_id;
+        option.textContent = vendor.gas_cylinder_vendor_name;
+        vendorSelect.appendChild(option);
+      });
+    };
+
+    const renderRows = (rows) => {
+      if (!tableBody) return;
+      if (!rows.length) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No pending outward cylinders.</td></tr>';
+        localStorage.removeItem('return_dc_no');
+        localStorage.removeItem('return_remarks');
+        return;
+      }
+      tableBody.innerHTML = rows.map((row, index) => `
+        <tr>
+          <td class="text-center">${index + 1}</td>
+          <td class="text-center">${escapeHtml(row.cylinder)}</td>
+          <td class="text-center">${escapeHtml(row.type)}</td>
+          <td class="text-center">${escapeHtml(row.vendor)}</td>
+          <td class="text-center">${escapeHtml(row.submitted_date)}</td>
+          <td class="text-center">${escapeHtml(row.entered_by)}</td>
+          <td class="text-center">
+            <input type="checkbox" class="form-check-input" name="OutwardCheck${index + 1}" id="OutwardCheck" value="${row.id}"/>
+          </td>
+        </tr>
+      `).join('');
+    };
+
+    fetch("{% url 'Cylinder-Outward-Data' %}", {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin'
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load outward data');
+        return response.json();
+      })
+      .then((payload) => {
+        const summary = payload.analytics && payload.analytics.summary ? payload.analytics.summary : {};
+        ['pending_outward', 'available_stock', 'avg_stock_out_hours', 'stock_out'].forEach((key) => setMetric(key, summary[key] || 0));
+        renderVendors(payload.vendors || []);
+        renderRows(payload.rows || []);
+      })
+      .catch(() => {
+        if (window.toastr) toastr.error('Unable to load outward data. Please refresh.', 'Data Error');
+      });
+  })();
 </script>
-{% endif %}
 {% endblock User-Scripts %}

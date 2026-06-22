@@ -59,6 +59,8 @@
   const syncSidebarToggleIcon = () => {
     if (!sidebarToggle) return
     const isOpen = isSidebarOpen()
+    body.classList.toggle('sidebar-open', isOpen)
+    body.classList.toggle('sidebar-closed', !isOpen)
     sidebarToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
     const icon = sidebarToggle.querySelector('i')
     if (icon) {
@@ -69,7 +71,6 @@
   const setSidebarState = (isOpen) => {
     if (!body) return
     body.classList.toggle('toggle-sidebar', mobileSidebarQuery.matches ? isOpen : !isOpen)
-    body.classList.toggle('sidebar-open', isOpen)
     syncSidebarToggleIcon()
   }
 
@@ -85,6 +86,7 @@
   syncSidebarToggleIcon()
   mobileSidebarQuery.addEventListener('change', () => {
     body.classList.remove('sidebar-open')
+    body.classList.remove('sidebar-closed')
     syncSidebarToggleIcon()
   })
 

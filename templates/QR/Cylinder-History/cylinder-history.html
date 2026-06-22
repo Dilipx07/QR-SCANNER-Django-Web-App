@@ -19,11 +19,11 @@
   </div>
 
   <div class="workflow-panel p-3 mb-3">
-    <form id="cylinder-History" class="needs-validation" action="{% url 'Cylinder-Inward-Outward-History-Submit' %}" method="get" novalidate="novalidate">
+    <form id="cylinder-History" class="needs-validation" action="{% url 'Cylinder-Inward-Outward-History' %}" method="get" novalidate="novalidate">
       <div class="row g-3 align-items-end">
         <div class="col-lg-4">
           <label for="cylinder_gas_vendor" class="form-label">Vendor</label>
-          <select name="cylinder_gas_vendor" id="cylinder_gas_vendor" class="form-select" required>
+          <select name="cylinder_gas_vendor" id="cylinder_gas_vendor" class="form-select" required data-history-vendor>
             <option value disabled selected>Select a vendor</option>
             {% for gcv in gas_cylinder_vendors %}
               <option value="{{gcv.gas_cylinder_vendor_id}}" {% if vendor_name == gcv.gas_cylinder_vendor_name %}selected{% endif %}>{{gcv.gas_cylinder_vendor_name}}</option>
@@ -49,12 +49,12 @@
   </div>
 
   <div class="row g-3 mb-3">
-    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card"><span>Total</span><strong>{{ analytics.summary.total_cylinders }}</strong></div></div>
-    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card metric-card-success"><span>Available</span><strong>{{ analytics.summary.available_stock }}</strong></div></div>
-    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card metric-card-warning"><span>Pending In</span><strong>{{ analytics.summary.pending_inward }}</strong></div></div>
-    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card metric-card-danger"><span>Pending Out</span><strong>{{ analytics.summary.pending_outward }}</strong></div></div>
-    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card"><span>Stock Out</span><strong>{{ analytics.summary.stock_out }}</strong></div></div>
-    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card"><span>Health</span><strong>{{ analytics.summary.stock_health }}%</strong></div></div>
+    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card"><span>Total</span><strong data-history-metric="total_cylinders">{{ analytics.summary.total_cylinders }}</strong></div></div>
+    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card metric-card-success"><span>Available</span><strong data-history-metric="available_stock">{{ analytics.summary.available_stock }}</strong></div></div>
+    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card metric-card-warning"><span>Pending In</span><strong data-history-metric="pending_inward">{{ analytics.summary.pending_inward }}</strong></div></div>
+    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card metric-card-danger"><span>Pending Out</span><strong data-history-metric="pending_outward">{{ analytics.summary.pending_outward }}</strong></div></div>
+    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card"><span>Stock Out</span><strong data-history-metric="stock_out">{{ analytics.summary.stock_out }}</strong></div></div>
+    <div class="col-xl-2 col-md-4 col-6"><div class="metric-card"><span>Health</span><strong data-history-metric="stock_health">{{ analytics.summary.stock_health }}%</strong></div></div>
   </div>
 
   <div class="row g-3 mb-3">
@@ -70,7 +70,7 @@
       <div class="card analytics-card">
         <div class="card-body">
           <h5 class="card-title m-0 p-0 mb-3">Vendor / Type Insights</h5>
-          <ul class="analytics-insights">
+          <ul class="analytics-insights" data-history-insights>
             {% for insight in analytics.insights %}
               <li>{{ insight }}</li>
             {% endfor %}
@@ -115,7 +115,7 @@
               <th class="text-center">Entered By</th>
             </tr>
           </thead>
-          <tbody class="text-center">
+          <tbody class="text-center" data-history-table-body>
             {% for csh in cylinder_stock_history %}
               <tr>
                 <td>{{ forloop.counter }}</td>
@@ -142,31 +142,139 @@
 
 {% block User-Scripts %}
 <script>
-  const reportAnalytics = {{ analytics_json|safe }};
+  let reportAnalytics = {{ analytics_json|safe }};
   const reportColors = ['#087984', '#4dae38', '#20272d', '#d98222', '#75b7bd', '#8bcf7c'];
+  const reportCharts = {};
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[char]));
 
-  new Chart(document.getElementById('reportMovementChart'), {
-    type: 'line',
-    data: {
-      labels: reportAnalytics.charts.movement.labels,
-      datasets: [
-        { label: 'Inward', data: reportAnalytics.charts.movement.inward, borderColor: '#087984', backgroundColor: 'rgba(8,121,132,.14)', tension: .35, fill: true },
-        { label: 'Outward', data: reportAnalytics.charts.movement.outward, borderColor: '#4dae38', backgroundColor: 'rgba(77,174,56,.16)', tension: .35, fill: true }
-      ]
-    },
-    options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  const destroyChart = (key) => {
+    if (reportCharts[key]) reportCharts[key].destroy();
+  };
+
+  const renderCharts = () => {
+    destroyChart('movement');
+    destroyChart('type');
+    destroyChart('vendor');
+    reportCharts.movement = new Chart(document.getElementById('reportMovementChart'), {
+      type: 'line',
+      data: {
+        labels: reportAnalytics.charts.movement.labels,
+        datasets: [
+          { label: 'Inward', data: reportAnalytics.charts.movement.inward, borderColor: '#087984', backgroundColor: 'rgba(8,121,132,.14)', tension: .35, fill: true },
+          { label: 'Outward', data: reportAnalytics.charts.movement.outward, borderColor: '#4dae38', backgroundColor: 'rgba(77,174,56,.16)', tension: .35, fill: true }
+        ]
+      },
+      options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    reportCharts.type = new Chart(document.getElementById('reportTypeChart'), {
+      type: 'doughnut',
+      data: { labels: reportAnalytics.charts.stock_by_type.labels, datasets: [{ data: reportAnalytics.charts.stock_by_type.data, backgroundColor: reportColors }] },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    reportCharts.vendor = new Chart(document.getElementById('reportVendorChart'), {
+      type: 'bar',
+      data: { labels: reportAnalytics.charts.vendor_mix.labels, datasets: [{ data: reportAnalytics.charts.vendor_mix.data, backgroundColor: '#087984', borderRadius: 6 }] },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  };
+
+  const setMetric = (key, value) => {
+    const target = document.querySelector(`[data-history-metric="${key}"]`);
+    if (target) target.textContent = key === 'stock_health' ? `${value || 0}%` : value;
+  };
+
+  const renderVendors = (vendors) => {
+    const vendorSelect = document.querySelector('[data-history-vendor]');
+    if (!vendorSelect) return;
+    const selectedVendor = new URLSearchParams(window.location.search).get('cylinder_gas_vendor') || '';
+    vendorSelect.innerHTML = '<option value disabled>Select a vendor</option>';
+    vendors.forEach((vendor) => {
+      const option = document.createElement('option');
+      option.value = vendor.gas_cylinder_vendor_id;
+      option.textContent = vendor.gas_cylinder_vendor_name;
+      option.selected = selectedVendor === String(vendor.gas_cylinder_vendor_id);
+      vendorSelect.appendChild(option);
+    });
+    const allOption = document.createElement('option');
+    allOption.value = 'ALL';
+    allOption.textContent = 'ALL';
+    allOption.selected = selectedVendor === 'ALL' || selectedVendor === '';
+    vendorSelect.appendChild(allOption);
+  };
+
+  const renderInsights = (insights) => {
+    const target = document.querySelector('[data-history-insights]');
+    if (!target) return;
+    target.innerHTML = (insights || []).map((insight) => `<li>${escapeHtml(insight)}</li>`).join('');
+  };
+
+  const renderRows = (rows) => {
+    const target = document.querySelector('[data-history-table-body]');
+    if (!target) return;
+    if (!rows.length) {
+      target.innerHTML = '<tr><td colspan="10">No cylinder movement found for this report.</td></tr>';
+      return;
+    }
+    target.innerHTML = rows.map((row, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${escapeHtml(row.cylinder)}</td>
+        <td>${escapeHtml(row.type)}</td>
+        <td>${escapeHtml(row.vendor)}</td>
+        <td>${escapeHtml(row.inward_date)}</td>
+        <td>${escapeHtml(row.stocked_in_date)}</td>
+        <td>${escapeHtml(row.outward_date)}</td>
+        <td>${escapeHtml(row.stock_out_date)}</td>
+        <td>${escapeHtml(row.return_dc)}</td>
+        <td>${escapeHtml(row.entered_by)}</td>
+      </tr>
+    `).join('');
+  };
+
+  const loadHistoryReport = (params = new URLSearchParams(window.location.search)) => {
+    fetch(`{% url 'Cylinder-Inward-Outward-History-Data' %}?${params.toString()}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin'
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load report data');
+        return response.json();
+      })
+      .then((payload) => {
+        reportAnalytics = payload.analytics || reportAnalytics;
+        const summary = reportAnalytics.summary || {};
+        ['total_cylinders', 'available_stock', 'pending_inward', 'pending_outward', 'stock_out', 'stock_health'].forEach((key) => setMetric(key, summary[key] || 0));
+        renderVendors(payload.vendors || []);
+        renderInsights(reportAnalytics.insights || []);
+        renderRows(payload.rows || []);
+        renderCharts();
+      })
+      .catch(() => {
+        renderCharts();
+        if (window.toastr) toastr.error('Unable to load report data. Please refresh.', 'Data Error');
+      });
+  };
+
+  document.getElementById('cylinder-History').addEventListener('submit', function (event) {
+    event.preventDefault();
+    document.body.classList.remove('app-loading');
+    document.getElementById('app-loader')?.classList.add('app-loader-hidden');
+    const params = new URLSearchParams(new FormData(this));
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    loadHistoryReport(params);
   });
 
-  new Chart(document.getElementById('reportTypeChart'), {
-    type: 'doughnut',
-    data: { labels: reportAnalytics.charts.stock_by_type.labels, datasets: [{ data: reportAnalytics.charts.stock_by_type.data, backgroundColor: reportColors }] },
-    options: { plugins: { legend: { position: 'bottom' } } }
-  });
-
-  new Chart(document.getElementById('reportVendorChart'), {
-    type: 'bar',
-    data: { labels: reportAnalytics.charts.vendor_mix.labels, datasets: [{ data: reportAnalytics.charts.vendor_mix.data, backgroundColor: '#087984', borderRadius: 6 }] },
-    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
-  });
+  loadHistoryReport();
 </script>
 {% endblock User-Scripts %}

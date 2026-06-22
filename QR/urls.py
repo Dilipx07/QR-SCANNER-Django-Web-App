@@ -26,6 +26,7 @@ urlpatterns = [
     
     # Cylinder Outward
     path('Cylinder-Outward-Form',views.cylinder_outward_form,name='Cylinder-Outward-Form'),
+    path('Cylinder-Outward-Data',views.cylinder_outward_data,name='Cylinder-Outward-Data'),
     path('Cylinder-Outward-Submit',views.cylinder_outward_submit,name='Cylinder-Outward-Submit'),
 
     # Cylinder Outward QR Check
@@ -34,6 +35,7 @@ urlpatterns = [
 
     # Cylinder Inward / Outward History Table
     path('Cylinder-Inward-Outward-History',views.cylinder_inward_outward_history_table,name='Cylinder-Inward-Outward-History'),
+    path('Cylinder-Inward-Outward-History-Data',views.cylinder_history_data,name='Cylinder-Inward-Outward-History-Data'),
 
     # Cylinder Inward / Outward History Table
     path('Cylinder-Inward-Outward-History-Submit',views.cylinder_inward_outward_history_submit,name='Cylinder-Inward-Outward-History-Submit'),
