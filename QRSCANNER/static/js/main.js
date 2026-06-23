@@ -176,34 +176,55 @@
     const searchForm = searchBar.querySelector('[data-page-search-form]')
     const searchInput = searchBar.querySelector('[data-page-search-input]')
     const searchResults = searchBar.querySelector('[data-page-search-results]')
+    const currentPageLabel = searchBar.querySelector('[data-current-page-label]')
     const normalizePath = (value) => (value || '').replace(/\/$/, '')
     const currentPage = pageLinks.find(page => normalizePath(window.location.pathname) === normalizePath(page.path)) || pageLinks[0]
     const setSearchOpen = (isOpen) => {
       if (searchResults) searchResults.classList.toggle('search-results-show', isOpen)
+    }
+    const goToFirstSearchResult = () => {
+      const firstResult = searchResults ? searchResults.querySelector('a.search-result-item') : null
+      const href = firstResult ? firstResult.getAttribute('href') : null
+      if (href) {
+        window.location.href = href
+      }
     }
     const renderSearchResults = (query = '') => {
       if (!searchResults) return
       const cleanQuery = query.trim().toLowerCase()
       const matches = cleanQuery
         ? pageLinks.filter(page => `${page.label} ${page.keywords}`.toLowerCase().includes(cleanQuery))
-        : [currentPage]
+        : []
       searchResults.innerHTML = matches.length
-        ? matches.map(page => `
-          <a href="${page.path}" class="search-result-item${page.path === currentPage.path ? ' active' : ''}">
-            <i class="bi bi-arrow-right-short"></i>
-            <span>${page.label}</span>
-          </a>
-        `).join('')
-        : '<div class="search-result-empty">No matching pages</div>'
-      setSearchOpen(true)
+        ? matches.map(page => {
+          if (page.path === currentPage.path) {
+            return `
+              <div class="search-result-item current-page-result" aria-disabled="true">
+                <i class="bi bi-dash-circle"></i>
+                <span>${page.label}</span>
+                <small>Current page</small>
+              </div>
+            `
+          }
+
+          return `
+            <a href="${page.path}" class="search-result-item">
+              <i class="bi bi-arrow-right-short"></i>
+              <span>${page.label}</span>
+            </a>
+          `
+        }).join('')
+        : cleanQuery
+          ? '<div class="search-result-empty">No matching pages</div>'
+          : ''
+      setSearchOpen(Boolean(cleanQuery))
     }
 
     if (searchInput) {
-      searchInput.value = currentPage.label
-      renderSearchResults('')
+      searchInput.value = ''
+      if (currentPageLabel) currentPageLabel.textContent = currentPage.label
       searchInput.addEventListener('focus', () => {
-        searchInput.select()
-        renderSearchResults(searchInput.value === currentPage.label ? '' : searchInput.value)
+        renderSearchResults(searchInput.value)
       })
       searchInput.addEventListener('input', () => renderSearchResults(searchInput.value))
     }
@@ -211,11 +232,16 @@
     if (searchForm) {
       searchForm.addEventListener('submit', event => {
         event.preventDefault()
-        const firstResult = searchResults ? searchResults.querySelector('.search-result-item') : null
-        if (firstResult) {
-          window.location.href = firstResult.getAttribute('href')
-        }
+        goToFirstSearchResult()
       })
+
+      const searchSubmitButton = searchForm.querySelector('button[type="submit"]')
+      if (searchSubmitButton) {
+        searchSubmitButton.addEventListener('click', event => {
+          event.preventDefault()
+          goToFirstSearchResult()
+        })
+      }
     }
 
     searchBar.addEventListener('click', event => event.stopPropagation())
@@ -273,6 +299,48 @@
       appLoader.style.display = ''
     }
   })
+
+  const connectionStatus = select('[data-connection-status]')
+  const connectionStatusText = select('[data-connection-status-text]')
+  const setConnectionStatus = (state) => {
+    if (!connectionStatus) return
+    connectionStatus.classList.remove('connection-status-active', 'connection-status-slow', 'connection-status-inactive')
+    connectionStatus.classList.add(`connection-status-${state}`)
+    const labels = {
+      active: 'Active',
+      slow: 'Slow internet',
+      inactive: 'Inactive'
+    }
+    connectionStatus.setAttribute('aria-label', `Server connection ${labels[state]}`)
+    if (connectionStatusText) connectionStatusText.textContent = labels[state]
+  }
+  const checkConnectionStatus = async () => {
+    if (!connectionStatus) return
+    const startedAt = performance.now()
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 5000)
+    try {
+      const response = await fetch('/health/', {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        signal: controller.signal,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      const elapsed = performance.now() - startedAt
+      setConnectionStatus(response.ok ? (elapsed > 1800 ? 'slow' : 'active') : 'inactive')
+    } catch (error) {
+      setConnectionStatus(error && error.name === 'AbortError' && navigator.onLine !== false ? 'slow' : 'inactive')
+    } finally {
+      window.clearTimeout(timeout)
+    }
+  }
+
+  checkConnectionStatus()
+  window.setInterval(checkConnectionStatus, 30000)
+  window.addEventListener('online', checkConnectionStatus)
+  window.addEventListener('offline', () => setConnectionStatus('inactive'))
 
   window.addEventListener('load', () => {
     setTimeout(hideAppLoader, 260)

@@ -2390,11 +2390,15 @@ a:hover {
 
 .header .search-bar {
   min-width: 340px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 0 20px;
 }
 
 .header .search-form {
   position: relative;
+  flex: 1 1 260px;
 }
 
 .header .search-form input {
@@ -2786,6 +2790,16 @@ body.modal-open .modal-content {
   position: relative;
 }
 
+.current-page-chip {
+  max-width: 190px;
+  overflow: hidden;
+  color: var(--app-muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .search-results {
   position: absolute;
   top: calc(100% + 8px);
@@ -2823,8 +2837,61 @@ body.modal-open .modal-content {
   color: var(--app-indigo);
 }
 
+.search-result-item small {
+  margin-left: auto;
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.search-result-item.current-page-result {
+  cursor: not-allowed;
+  color: var(--app-muted);
+}
+
+.search-result-item.current-page-result:hover,
+.search-result-item.current-page-result:focus {
+  background: rgba(100, 116, 139, 0.08);
+  color: var(--app-muted);
+}
+
 .search-result-empty {
   color: var(--app-muted);
+}
+
+.connection-status {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: var(--app-soft-shadow);
+}
+
+.connection-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.connection-status-active {
+  color: #15803d;
+}
+
+.connection-status-inactive {
+  color: #dc2626;
+}
+
+.connection-status-slow {
+  color: #ca8a04;
 }
 
 @media (min-width: 1200px) {
@@ -2867,6 +2934,9 @@ body.modal-open .modal-content {
     left: 14px;
     right: 14px;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 12px;
     border: 1px solid var(--app-line);
     border-radius: 8px;
@@ -2887,6 +2957,29 @@ body.modal-open .modal-content {
 
   .header-nav .nav-icon {
     margin-left: 8px;
+  }
+
+  .current-page-chip {
+    max-width: 36%;
+    font-size: 12px;
+  }
+
+  .connection-status {
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 8px;
+  }
+
+  .connection-status-text {
+    display: none;
+  }
+
+  .connection-status-dot {
+    width: 10px;
+    height: 10px;
   }
 
   .sidebar {
