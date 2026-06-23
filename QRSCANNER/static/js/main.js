@@ -165,6 +165,21 @@
     appLoader.classList.remove('app-loader-hidden')
   }
 
+  const hideLocalPreloaders = () => {
+    select('#preloader', true).forEach(loader => {
+      loader.style.display = 'none'
+    })
+  }
+
+  document.addEventListener('show.bs.modal', () => {
+    if (mobileSidebarQuery.matches) {
+      closeSidebar()
+    }
+    hideAppLoader()
+    hideLocalPreloaders()
+    if (searchBar) searchBar.classList.remove('search-bar-show')
+  })
+
   window.addEventListener('load', () => {
     setTimeout(hideAppLoader, 260)
   })

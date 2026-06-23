@@ -2738,15 +2738,40 @@ a:hover {
 }
 
 .modal-backdrop {
-  z-index: 11050;
+  z-index: 11990 !important;
 }
 
 .modal {
-  z-index: 11060;
+  z-index: 12000 !important;
 }
 
 .modal.show {
   pointer-events: auto;
+}
+
+.modal-backdrop.show {
+  opacity: 0.42;
+}
+
+.modal-dialog {
+  position: relative;
+  z-index: 1;
+}
+
+.modal-content {
+  background: #ffffff;
+}
+
+body.modal-open .sidebar-backdrop,
+body.modal-open .app-loader,
+body.modal-open #preloader {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.modal-open #preloader {
+  display: none !important;
 }
 
 @media (min-width: 1200px) {
