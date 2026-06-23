@@ -2774,6 +2774,59 @@ body.modal-open #preloader {
   display: none !important;
 }
 
+body.modal-open #main,
+body.modal-open #footer,
+body.modal-open .modal,
+body.modal-open .modal-dialog,
+body.modal-open .modal-content {
+  pointer-events: auto !important;
+}
+
+.search-bar {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 1025;
+  display: none;
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--app-shadow);
+}
+
+.search-results-show {
+  display: block;
+}
+
+.search-result-item,
+.search-result-empty {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  color: var(--app-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.search-result-item:hover,
+.search-result-item:focus,
+.search-result-item.active {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--app-indigo);
+}
+
+.search-result-empty {
+  color: var(--app-muted);
+}
+
 @media (min-width: 1200px) {
   #main,
   #footer {

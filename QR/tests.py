@@ -93,6 +93,7 @@ class CylinderWorkflowTests(TestCase):
         self.client = Client(HTTP_HOST="127.0.0.1")
         session = self.client.session
         session["Login_id"] = "tester"
+        session["auth_session_started_at"] = int(timezone.now().timestamp())
         session["auth_last_activity"] = int(timezone.now().timestamp())
         session.save()
         self.vendor = Gas_Cylinder_Vendors_Master.objects.create(

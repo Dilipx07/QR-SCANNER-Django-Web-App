@@ -197,7 +197,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Below Two lines is used to set session time and whether to expire a session when user closes the browser
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '86400')) # 24 Hours
+SESSION_IDLE_TIMEOUT_SECONDS = int(os.getenv('SESSION_IDLE_TIMEOUT_SECONDS', '1800')) # 30 minutes
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', str(7 * 24 * 60 * 60))) # 7 days
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
@@ -212,7 +213,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
-IDLE_TIME = SESSION_COOKIE_AGE
+IDLE_TIME = SESSION_IDLE_TIMEOUT_SECONDS
 from datetime import timedelta
 SESSION_EXPIRE_SECONDS = timedelta(seconds=SESSION_COOKIE_AGE)
 # django-session-timeout After Sesion Timeout.

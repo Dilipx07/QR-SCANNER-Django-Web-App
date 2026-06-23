@@ -56,6 +56,14 @@
   const searchBar = select('.search-bar')
   const appLoader = select('#app-loader')
   const mobileSidebarQuery = window.matchMedia('(max-width: 1199px)')
+  const sidebarStateKey = 'cm.sidebar.state'
+  const pageLinks = [
+    { label: 'Dashboard', path: '/QR/Dashboard', keywords: 'home stock command center analytics' },
+    { label: 'Cylinder Inward', path: '/QR/Cylinder-Inward-Form', keywords: 'inward scan receive cylinder stock in' },
+    { label: 'Cylinder Outward', path: '/QR/Cylinder-Outward-Form', keywords: 'outward issue return cylinder stock out' },
+    { label: 'Vendors', path: '/QR/Vendors', keywords: 'vendor master supplier directory' },
+    { label: 'Inward / Outward Report', path: '/QR/Cylinder-Inward-Outward-History', keywords: 'report history movement ledger analytics' }
+  ]
 
   const isSidebarOpen = () => {
     if (!body) return false
@@ -83,21 +91,48 @@
     syncSidebarToggleIcon()
   }
 
-  const closeSidebar = () => setSidebarState(false)
+  const persistSidebarState = (isOpen) => {
+    try {
+      window.sessionStorage.setItem(sidebarStateKey, isOpen ? 'open' : 'closed')
+    } catch (error) {
+      console.warn('Unable to persist sidebar state.', error)
+    }
+  }
+
+  const getStoredSidebarState = () => {
+    try {
+      return window.sessionStorage.getItem(sidebarStateKey)
+    } catch (error) {
+      return null
+    }
+  }
+
+  const applyStoredSidebarState = () => {
+    const storedState = getStoredSidebarState()
+    const shouldOpen = storedState ? storedState === 'open' : !mobileSidebarQuery.matches
+    setSidebarState(shouldOpen)
+  }
+
+  const closeSidebar = (persist = true) => {
+    setSidebarState(false)
+    if (persist) persistSidebarState(false)
+  }
 
   if (sidebarToggle) {
     sidebarToggle.addEventListener('click', function(e) {
       e.preventDefault()
-      setSidebarState(!isSidebarOpen())
+      const nextState = !isSidebarOpen()
+      setSidebarState(nextState)
+      persistSidebarState(nextState)
     })
   }
 
-  syncSidebarToggleIcon()
+  applyStoredSidebarState()
   mobileSidebarQuery.addEventListener('change', () => {
     body.classList.remove('sidebar-open')
     body.classList.remove('sidebar-closed')
     body.classList.remove('sidebar-scroll-locked')
-    syncSidebarToggleIcon()
+    applyStoredSidebarState()
   })
 
   select('[data-sidebar-close]', true).forEach(closeControl => {
@@ -107,7 +142,7 @@
   select('#sidebar .nav-link', true).forEach(navLink => {
     navLink.addEventListener('click', () => {
       if (window.matchMedia('(max-width: 1199px)').matches) {
-        closeSidebar()
+        closeSidebar(false)
       }
     })
   })
@@ -138,6 +173,51 @@
   }
 
   if (searchBar) {
+    const searchForm = searchBar.querySelector('[data-page-search-form]')
+    const searchInput = searchBar.querySelector('[data-page-search-input]')
+    const searchResults = searchBar.querySelector('[data-page-search-results]')
+    const normalizePath = (value) => (value || '').replace(/\/$/, '')
+    const currentPage = pageLinks.find(page => normalizePath(window.location.pathname) === normalizePath(page.path)) || pageLinks[0]
+    const setSearchOpen = (isOpen) => {
+      if (searchResults) searchResults.classList.toggle('search-results-show', isOpen)
+    }
+    const renderSearchResults = (query = '') => {
+      if (!searchResults) return
+      const cleanQuery = query.trim().toLowerCase()
+      const matches = cleanQuery
+        ? pageLinks.filter(page => `${page.label} ${page.keywords}`.toLowerCase().includes(cleanQuery))
+        : [currentPage]
+      searchResults.innerHTML = matches.length
+        ? matches.map(page => `
+          <a href="${page.path}" class="search-result-item${page.path === currentPage.path ? ' active' : ''}">
+            <i class="bi bi-arrow-right-short"></i>
+            <span>${page.label}</span>
+          </a>
+        `).join('')
+        : '<div class="search-result-empty">No matching pages</div>'
+      setSearchOpen(true)
+    }
+
+    if (searchInput) {
+      searchInput.value = currentPage.label
+      renderSearchResults('')
+      searchInput.addEventListener('focus', () => {
+        searchInput.select()
+        renderSearchResults(searchInput.value === currentPage.label ? '' : searchInput.value)
+      })
+      searchInput.addEventListener('input', () => renderSearchResults(searchInput.value))
+    }
+
+    if (searchForm) {
+      searchForm.addEventListener('submit', event => {
+        event.preventDefault()
+        const firstResult = searchResults ? searchResults.querySelector('.search-result-item') : null
+        if (firstResult) {
+          window.location.href = firstResult.getAttribute('href')
+        }
+      })
+    }
+
     searchBar.addEventListener('click', event => event.stopPropagation())
     document.addEventListener('click', event => {
       if (
@@ -146,6 +226,7 @@
         !event.target.closest('.search-bar-toggle')
       ) {
         searchBar.classList.remove('search-bar-show')
+        setSearchOpen(false)
       }
     })
   }
@@ -171,13 +252,26 @@
     })
   }
 
-  document.addEventListener('show.bs.modal', () => {
-    if (mobileSidebarQuery.matches) {
-      closeSidebar()
+  document.addEventListener('show.bs.modal', event => {
+    if (event.target && event.target.parentElement !== document.body) {
+      document.body.appendChild(event.target)
     }
+    if (mobileSidebarQuery.matches) {
+      closeSidebar(false)
+    }
+    body.classList.remove('sidebar-scroll-locked')
     hideAppLoader()
     hideLocalPreloaders()
+    if (appLoader) {
+      appLoader.style.display = 'none'
+    }
     if (searchBar) searchBar.classList.remove('search-bar-show')
+  })
+
+  document.addEventListener('hidden.bs.modal', () => {
+    if (appLoader) {
+      appLoader.style.display = ''
+    }
   })
 
   window.addEventListener('load', () => {

@@ -61,7 +61,9 @@ def LoginAuth(request):
             request.session['User_Name'] = user.qr_scanned_name
             request.session['Login_id'] = user.qr_scanned_name
             request.session['Dashboard'] = 'QR-Dashboard'
-            request.session['auth_last_activity'] = int(__import__('time').time())
+            now = int(__import__('time').time())
+            request.session['auth_session_started_at'] = now
+            request.session['auth_last_activity'] = now
             request.session.set_expiry(settings.SESSION_COOKIE_AGE)
             return redirect('Cylinder-Stock-Dashboard')
 

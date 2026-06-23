@@ -7,10 +7,11 @@
   </div><!-- End Logo -->
 
   <div class="search-bar">
-    <form class="search-form d-flex align-items-center" method="GET" action="#" role="search">
-      <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+    <form class="search-form d-flex align-items-center" method="GET" action="#" role="search" data-page-search-form>
+      <input type="text" name="query" placeholder="Search" title="Enter search keyword" autocomplete="off" data-page-search-input>
       <button type="submit" title="Search"><i class="bi bi-search"></i></button>
     </form>
+    <div class="search-results" data-page-search-results></div>
   </div><!-- End Search Bar -->
 
   <nav class="header-nav ms-auto">

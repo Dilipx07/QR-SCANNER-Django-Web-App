@@ -29,6 +29,7 @@ class LoginAuthenticationTests(TestCase):
 
         self.assertRedirects(response, reverse('Cylinder-Stock-Dashboard'), fetch_redirect_response=False)
         self.assertEqual(self.client.session['Login_id'], 'scanner-user')
+        self.assertIn('auth_session_started_at', self.client.session)
         self.assertIn('auth_last_activity', self.client.session)
 
     def test_invalid_login_does_not_create_session(self):
@@ -48,12 +49,27 @@ class SessionExpiryMiddlewareTests(TestCase):
 
         self.assertRedirects(response, reverse('Login'), fetch_redirect_response=False)
 
-    @override_settings(SESSION_COOKIE_AGE=1)
-    def test_expired_session_auto_logs_out_and_redirects(self):
+    @override_settings(SESSION_IDLE_TIMEOUT_SECONDS=1, SESSION_COOKIE_AGE=604800)
+    def test_idle_session_auto_logs_out_and_redirects(self):
         session = self.client.session
         session['Login_id'] = 'scanner-user'
         session['User_Name'] = 'scanner-user'
+        session['auth_session_started_at'] = int(time.time())
         session['auth_last_activity'] = int(time.time()) - 5
+        session.save()
+
+        response = self.client.get(reverse('Cylinder-Stock-Dashboard'))
+
+        self.assertRedirects(response, reverse('Login'), fetch_redirect_response=False)
+        self.assertNotIn('Login_id', self.client.session)
+
+    @override_settings(SESSION_IDLE_TIMEOUT_SECONDS=1800, SESSION_COOKIE_AGE=1)
+    def test_absolute_session_expiry_logs_out_and_redirects(self):
+        session = self.client.session
+        session['Login_id'] = 'scanner-user'
+        session['User_Name'] = 'scanner-user'
+        session['auth_session_started_at'] = int(time.time()) - 5
+        session['auth_last_activity'] = int(time.time())
         session.save()
 
         response = self.client.get(reverse('Cylinder-Stock-Dashboard'))

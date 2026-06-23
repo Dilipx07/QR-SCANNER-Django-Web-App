@@ -19,8 +19,11 @@ class SessionExpiryMiddleware:
                 return self._unauthorized_response(request)
 
             now = int(time.time())
+            session_started_at = int(request.session.get('auth_session_started_at', now))
             last_activity = int(request.session.get('auth_last_activity', now))
-            if now - last_activity > settings.SESSION_COOKIE_AGE:
+            idle_timeout = getattr(settings, 'SESSION_IDLE_TIMEOUT_SECONDS', 1800)
+            absolute_timeout = settings.SESSION_COOKIE_AGE
+            if now - session_started_at > absolute_timeout or now - last_activity > idle_timeout:
                 logout(request)
                 request.session.flush()
                 messages.warning(request, 'Your session has expired. Please login again.')
