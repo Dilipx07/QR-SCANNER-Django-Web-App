@@ -3051,3 +3051,109 @@ body.sidebar-scroll-locked .sidebar-floating-toggle {
     transform: translateX(calc(min(284px, calc(100vw - 48px)) - 18px));
   }
 }
+
+/*--------------------------------------------------------------
+# Card Heading and Vendor Master Refinements
+--------------------------------------------------------------*/
+.card .card-body {
+  padding-top: 20px;
+}
+
+.card-body > .card-title {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+  line-height: 1.25;
+}
+
+.card-body > .d-flex .card-title,
+.vendor-toolbar .card-title {
+  min-height: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.analytics-card .card-body {
+  padding-top: 20px;
+}
+
+.analytics-card .card-title {
+  align-items: center;
+  font-weight: 800;
+}
+
+.vendor-master-page {
+  max-width: 100%;
+}
+
+.vendor-table-card {
+  overflow: visible;
+}
+
+.vendor-table-card .card-body {
+  padding: 24px;
+}
+
+.vendor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.vendor-title {
+  color: var(--app-ink);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.vendor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vendor-table {
+  margin-bottom: 0;
+}
+
+.vendor-table th,
+.vendor-table td {
+  vertical-align: middle;
+}
+
+.vendor-table thead th {
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vendor-table tbody td {
+  color: var(--app-ink);
+}
+
+.vendor-address {
+  max-width: 280px;
+  white-space: normal;
+}
+
+@media (max-width: 767px) {
+  .vendor-table-card .card-body {
+    padding: 18px;
+  }
+
+  .vendor-toolbar {
+    align-items: stretch;
+  }
+
+  .vendor-actions {
+    justify-content: flex-start;
+  }
+}

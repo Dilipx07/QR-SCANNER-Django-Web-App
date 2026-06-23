@@ -4,7 +4,7 @@
 
 {% block User-Body %}
 <div id="preloader"></div>
-<section class="section analytics-page">
+<section class="section analytics-page vendor-master-page">
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <div>
       <h4 class="page-heading mb-1">Vendor Master</h4>
@@ -15,80 +15,101 @@
     </a>
   </div>
 
-  <div class="row g-3">
-    <div class="col-xl-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title m-0 p-0 mb-3">Vendor Details</h5>
-          <form id="vendor-form" class="needs-validation" novalidate>
-            {% csrf_token %}
-            <input type="hidden" id="vendor_id" name="vendor_id">
-            <div class="mb-2">
-              <label for="vendor_name" class="form-label">Vendor Name</label>
-              <input type="text" class="form-control" id="vendor_name" name="vendor_name" maxlength="255" required>
-              <code class="invalid-feedback">Vendor name is required.</code>
-            </div>
-            <div class="mb-2">
-              <label for="contact_person" class="form-label">Contact Person</label>
-              <input type="text" class="form-control" id="contact_person" name="contact_person" maxlength="120">
-            </div>
-            <div class="mb-2">
-              <label for="phone" class="form-label">Phone</label>
-              <input type="text" class="form-control" id="phone" name="phone" maxlength="40">
-            </div>
-            <div class="mb-2">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email">
-            </div>
-            <div class="mb-3">
-              <label for="address" class="form-label">Address</label>
-              <textarea class="form-control" id="address" name="address" rows="3"></textarea>
-            </div>
-            <div class="form-check form-switch mb-3">
-              <input class="form-check-input" type="checkbox" role="switch" id="active" name="active" checked>
-              <label class="form-check-label" for="active">Active vendor</label>
-            </div>
-            <div class="d-flex gap-2">
-              <button type="submit" class="btn btn-submit text-white flex-fill">
-                <i class="bi bi-save"></i> Save
-              </button>
-              <button type="button" class="btn btn-outline-secondary flex-fill" id="vendor-reset">
-                Reset
-              </button>
-            </div>
-          </form>
+  <div class="card vendor-table-card">
+    <div class="card-body">
+      <div class="vendor-toolbar">
+        <div>
+          <h5 class="card-title vendor-title">Vendor Directory</h5>
+          <p class="text-muted mb-0">Create, update, import, export, and deactivate vendor records.</p>
+        </div>
+        <div class="vendor-actions">
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="vendor-export">
+            <i class="bi bi-download"></i> Export CSV
+          </button>
+          <label class="btn btn-outline-secondary btn-sm mb-0" for="vendor-import">
+            <i class="bi bi-upload"></i> Import CSV
+          </label>
+          <input type="file" id="vendor-import" class="d-none" accept=".csv,text/csv">
+          <button type="button" class="btn btn-submit text-white btn-sm" id="vendor-add" data-bs-toggle="modal" data-bs-target="#VendorModal">
+            <i class="bi bi-plus-lg"></i> Add Vendor
+          </button>
+          <button type="button" class="btn btn-view text-white btn-sm" id="vendor-refresh">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
         </div>
       </div>
-    </div>
 
-    <div class="col-xl-8">
-      <div class="card">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-            <h5 class="card-title m-0 p-0">Vendor Directory</h5>
-            <button type="button" class="btn btn-view text-white btn-sm" id="vendor-refresh">
-              <i class="bi bi-arrow-clockwise"></i> Refresh
+      <div class="table-responsive mt-3">
+        <table class="table table-striped align-middle vendor-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Vendor</th>
+              <th>Contact</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Address</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody data-vendor-table>
+            <tr><td colspan="8" class="text-center text-muted py-4">Loading vendors...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="VendorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" data-vendor-modal-title>Add Vendor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="vendor-form" class="needs-validation" data-ajax-form novalidate>
+          <div class="modal-body">
+            {% csrf_token %}
+            <input type="hidden" id="vendor_id" name="vendor_id">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="vendor_name" class="form-label">Vendor Name</label>
+                <input type="text" class="form-control" id="vendor_name" name="vendor_name" maxlength="255" required>
+                <code class="invalid-feedback">Vendor name is required.</code>
+              </div>
+              <div class="col-md-6">
+                <label for="contact_person" class="form-label">Contact Person</label>
+                <input type="text" class="form-control" id="contact_person" name="contact_person" maxlength="120">
+              </div>
+              <div class="col-md-6">
+                <label for="phone" class="form-label">Phone</label>
+                <input type="text" class="form-control" id="phone" name="phone" maxlength="40">
+              </div>
+              <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email">
+              </div>
+              <div class="col-12">
+                <label for="address" class="form-label">Address</label>
+                <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="active" name="active" checked>
+                  <label class="form-check-label" for="active">Active vendor</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary" id="vendor-reset">Reset</button>
+            <button type="submit" class="btn btn-submit text-white">
+              <i class="bi bi-save"></i> Save Vendor
             </button>
           </div>
-          <div class="table-responsive">
-            <table class="table table-striped align-middle">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Vendor</th>
-                  <th>Contact</th>
-                  <th>Phone</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th class="text-end">Action</th>
-                </tr>
-              </thead>
-              <tbody data-vendor-table>
-                <tr><td colspan="7" class="text-center text-muted py-4">Loading vendors...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   </div>
@@ -101,6 +122,10 @@
     const form = document.getElementById('vendor-form');
     const tableBody = document.querySelector('[data-vendor-table]');
     const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    const vendorModalElement = document.getElementById('VendorModal');
+    const vendorModal = bootstrap.Modal.getOrCreateInstance(vendorModalElement);
+    const modalTitle = document.querySelector('[data-vendor-modal-title]');
+    const importInput = document.getElementById('vendor-import');
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
       '&': '&amp;',
       '<': '&lt;',
@@ -113,8 +138,12 @@
 
     const setLoading = (enabled) => {
       const loader = document.getElementById('preloader');
-      if (!loader) return;
-      loader.style.display = enabled ? 'block' : 'none';
+      const appLoader = document.getElementById('app-loader');
+      if (loader) loader.style.display = enabled ? 'block' : 'none';
+      if (!enabled && appLoader) {
+        document.body.classList.remove('app-loading');
+        appLoader.classList.add('app-loader-hidden');
+      }
     };
 
     const resetForm = () => {
@@ -122,33 +151,32 @@
       form.classList.remove('was-validated');
       document.getElementById('vendor_id').value = '';
       document.getElementById('active').checked = true;
+      modalTitle.textContent = 'Add Vendor';
     };
 
     const renderTable = () => {
       if (!vendors.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No vendors found. Add the first vendor from the form.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No vendors found. Use Add Vendor or import a CSV file.</td></tr>';
         return;
       }
       tableBody.innerHTML = vendors.map((vendor, index) => `
         <tr>
           <td>${index + 1}</td>
-          <td>
-            <strong>${escapeHtml(vendor.gas_cylinder_vendor_name)}</strong>
-            <div class="text-muted small">${escapeHtml(vendor.gas_cylinder_vendor_address || 'No address')}</div>
-          </td>
+          <td><strong>${escapeHtml(vendor.gas_cylinder_vendor_name)}</strong></td>
           <td>${escapeHtml(vendor.gas_cylinder_vendor_contact_person || 'NA')}</td>
           <td>${escapeHtml(vendor.gas_cylinder_vendor_phone || 'NA')}</td>
           <td>${escapeHtml(vendor.gas_cylinder_vendor_email || 'NA')}</td>
+          <td class="vendor-address">${escapeHtml(vendor.gas_cylinder_vendor_address || 'NA')}</td>
           <td>
             <span class="badge ${vendor.gas_cylinder_vendor_active ? 'bg-success' : 'bg-secondary'}">
               ${vendor.gas_cylinder_vendor_active ? 'Active' : 'Inactive'}
             </span>
           </td>
           <td class="text-end">
-            <button type="button" class="btn btn-sm btn-view text-white" data-vendor-edit="${vendor.gas_cylinder_vendor_id}">
+            <button type="button" class="btn btn-sm btn-view text-white" data-vendor-edit="${vendor.gas_cylinder_vendor_id}" title="Edit vendor">
               <i class="bi bi-pencil"></i>
             </button>
-            <button type="button" class="btn btn-sm btn-danger text-white" data-vendor-delete="${vendor.gas_cylinder_vendor_id}" ${vendor.gas_cylinder_vendor_active ? '' : 'disabled'}>
+            <button type="button" class="btn btn-sm btn-danger text-white" data-vendor-delete="${vendor.gas_cylinder_vendor_id}" ${vendor.gas_cylinder_vendor_active ? '' : 'disabled'} title="Deactivate vendor">
               <i class="bi bi-trash"></i>
             </button>
           </td>
@@ -179,6 +207,16 @@
         .finally(() => setLoading(false));
     };
 
+    const saveVendor = (payload) => fetch("{% url 'Vendor-Save' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: payload,
+      credentials: 'same-origin'
+    }).then((response) => response.json().then((body) => ({ response, body })));
+
     const fillForm = (vendor) => {
       document.getElementById('vendor_id').value = vendor.gas_cylinder_vendor_id;
       document.getElementById('vendor_name').value = vendor.gas_cylinder_vendor_name || '';
@@ -187,12 +225,110 @@
       document.getElementById('email').value = vendor.gas_cylinder_vendor_email || '';
       document.getElementById('address').value = vendor.gas_cylinder_vendor_address || '';
       document.getElementById('active').checked = Boolean(vendor.gas_cylinder_vendor_active);
-      document.getElementById('vendor_name').focus();
+      modalTitle.textContent = 'Edit Vendor';
+      vendorModal.show();
+      setTimeout(() => document.getElementById('vendor_name').focus(), 180);
+    };
+
+    const exportCsv = () => {
+      const headers = ['Vendor Name', 'Contact Person', 'Phone', 'Email', 'Address', 'Active'];
+      const rows = vendors.map((vendor) => [
+        vendor.gas_cylinder_vendor_name,
+        vendor.gas_cylinder_vendor_contact_person,
+        vendor.gas_cylinder_vendor_phone,
+        vendor.gas_cylinder_vendor_email,
+        vendor.gas_cylinder_vendor_address,
+        vendor.gas_cylinder_vendor_active ? 'Yes' : 'No'
+      ]);
+      const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'vendors.csv';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    };
+
+    const parseCsvLine = (line) => {
+      const cells = [];
+      let cell = '';
+      let quoted = false;
+
+      for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+        const next = line[index + 1];
+
+        if (char === '"' && quoted && next === '"') {
+          cell += '"';
+          index += 1;
+          continue;
+        }
+
+        if (char === '"') {
+          quoted = !quoted;
+          continue;
+        }
+
+        if (char === ',' && !quoted) {
+          cells.push(cell.trim());
+          cell = '';
+          continue;
+        }
+
+        cell += char;
+      }
+
+      cells.push(cell.trim());
+      return cells;
+    };
+
+    const parseCsv = (text) => text
+      .trim()
+      .split(/\r?\n/)
+      .slice(1)
+      .map(parseCsvLine)
+      .filter((row) => row[0]);
+
+    const importCsv = (file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const rows = parseCsv(String(reader.result || ''));
+        if (!rows.length) {
+          if (window.toastr) toastr.warning('No vendor rows found in CSV.', 'Import');
+          return;
+        }
+        setLoading(true);
+        Promise.all(rows.map((row) => {
+          const payload = new FormData();
+          payload.set('vendor_name', row[0] || '');
+          payload.set('contact_person', row[1] || '');
+          payload.set('phone', row[2] || '');
+          payload.set('email', row[3] || '');
+          payload.set('address', row[4] || '');
+          payload.set('active', /^y|1|true|active$/i.test(row[5] || 'Yes') ? '1' : '0');
+          return saveVendor(payload);
+        }))
+          .then((results) => {
+            const failed = results.filter(({ response }) => !response.ok);
+            if (failed.length && window.toastr) toastr.warning(`${failed.length} rows were not imported.`, 'Import');
+            if (!failed.length && window.toastr) toastr.success('Vendor import completed.', 'Success');
+            loadVendors();
+          })
+          .catch(() => {
+            if (window.toastr) toastr.error('Vendor import failed.', 'Import Failed');
+          })
+          .finally(() => {
+            importInput.value = '';
+            setLoading(false);
+          });
+      };
+      reader.readAsText(file);
     };
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       event.stopPropagation();
+      event.stopImmediatePropagation();
       if (!form.checkValidity()) {
         form.classList.add('was-validated');
         return;
@@ -200,20 +336,12 @@
       const payload = new FormData(form);
       payload.set('active', document.getElementById('active').checked ? '1' : '0');
       setLoading(true);
-      fetch("{% url 'Vendor-Save' %}", {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: payload,
-        credentials: 'same-origin'
-      })
-        .then((response) => response.json().then((body) => ({ response, body })))
+      saveVendor(payload)
         .then(({ response, body }) => {
           if (!response.ok) throw new Error(body.message || 'Unable to save vendor');
           if (window.toastr) toastr.success('Vendor saved.', 'Success');
           resetForm();
+          vendorModal.hide();
           loadVendors();
         })
         .catch((error) => {
@@ -255,8 +383,13 @@
       }
     });
 
+    document.getElementById('vendor-add').addEventListener('click', resetForm);
     document.getElementById('vendor-reset').addEventListener('click', resetForm);
     document.getElementById('vendor-refresh').addEventListener('click', loadVendors);
+    document.getElementById('vendor-export').addEventListener('click', exportCsv);
+    importInput.addEventListener('change', () => {
+      if (importInput.files && importInput.files[0]) importCsv(importInput.files[0]);
+    });
     loadVendors();
   })();
 </script>

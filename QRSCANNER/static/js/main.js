@@ -182,6 +182,9 @@
 
   select('form', true).forEach(form => {
     form.addEventListener('submit', () => {
+      if (form.hasAttribute('data-ajax-form')) {
+        return
+      }
       if (form.checkValidity()) {
         showAppLoader()
       }
