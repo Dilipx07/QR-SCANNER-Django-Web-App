@@ -318,7 +318,7 @@
     if (!connectionStatus) return
     const startedAt = performance.now()
     const controller = new AbortController()
-    const timeout = window.setTimeout(() => controller.abort(), 5000)
+    const timeout = window.setTimeout(() => controller.abort(), 3000)
     try {
       const response = await fetch('/health/', {
         cache: 'no-store',
@@ -329,7 +329,7 @@
         }
       })
       const elapsed = performance.now() - startedAt
-      setConnectionStatus(response.ok ? (elapsed > 1800 ? 'slow' : 'active') : 'inactive')
+      setConnectionStatus(response.ok ? (elapsed > 1000 ? 'slow' : 'active') : 'inactive')
     } catch (error) {
       setConnectionStatus(error && error.name === 'AbortError' && navigator.onLine !== false ? 'slow' : 'inactive')
     } finally {
