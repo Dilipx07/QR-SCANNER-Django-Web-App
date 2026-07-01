@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -o errexit
 
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-python -m manage.py collectstatic --no-input
-python -m manage.py migrate --no-input
-python -m manage.py seed_scanner_login
+if [ -z "$VERCEL" ]; then
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
+fi
+
+python manage.py collectstatic --no-input
+python manage.py migrate --no-input
+python manage.py seed_scanner_login
