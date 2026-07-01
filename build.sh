@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 set -o errexit
 
-if [ -z "$VERCEL" ]; then
-    python -m pip install --upgrade pip
-    python -m pip install -r requirements.txt
-fi
+python -m pip install --upgrade pip
+python -m pip install -r requirements-render.txt
 
 python manage.py collectstatic --no-input
 python manage.py migrate --no-input
